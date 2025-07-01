@@ -6,23 +6,29 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class LoginRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    protected $rules = [
+        'email' => 'required|exists:users,email',
+        'password' => 'required'
+    ];
+
+    protected $messages = [
+        'email.required' => 'Mohon isikan email anda terlebih dahulu!',
+        'email.exists' => 'Email belum terdaftar!',
+        'password.required' => 'Mohon isikan password anda terlebih dahulu!',
+    ];
+
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        return [
-            //
-        ];
+        return $this->rules;
+    }
+
+    public function messages(): array
+    {
+        return $this->messages;
     }
 }

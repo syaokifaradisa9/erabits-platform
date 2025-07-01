@@ -21,7 +21,7 @@ export default function Login() {
 
     const onSubmit = (e) => {
         e.preventDefault();
-        post("/auth/verify");
+        post("/verify");
     };
 
     return (
