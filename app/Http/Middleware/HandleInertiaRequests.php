@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -18,10 +19,14 @@ class HandleInertiaRequests extends Middleware
     {
         $successMessage = $request->session()->pull('success');
         $errorMessage = $request->session()->pull('error');
+        $loggedUser = Auth::user();
+        $roles = $loggedUser->getRoleNames();
 
         return [
             ...parent::share($request),
             ...[
+                'loggeduser' => $loggedUser,
+                'loggedrole' => $roles,
                 'flash' => [
                     'message' => $successMessage ?? $errorMessage ?? null,
                     'type' => $successMessage ? 'success' : ($errorMessage ? 'error' : null),

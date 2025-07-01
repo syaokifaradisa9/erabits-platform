@@ -2,8 +2,8 @@ import { Head, useForm, usePage } from "@inertiajs/react";
 import { LogIn } from "lucide-react";
 import { useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import FormInput from "../../Components/forms/FormInput";
-import Button from "../../Components/buttons/Button";
+import FormInput from "../../Components/Forms/FormInput";
+import Button from "../../Components/Buttons/Button";
 
 export default function Login() {
     const { setData, post, processing, errors } = useForm({

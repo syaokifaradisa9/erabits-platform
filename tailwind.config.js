@@ -5,7 +5,13 @@ export default {
         "./resources/**/*.js",
     ],
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+                primary: "#6498C6",
+                darkprimary: "#416080",
+            },
+        },
     },
     plugins: [],
+    darkMode: "class",
 };
