@@ -1,4 +1,4 @@
-import { Home } from "lucide-react";
+import { Briefcase, Home } from "lucide-react";
 import SidebarLink from "./SideBarLink";
 
 export default function Sidebar({ isOpen, setIsOpen }) {
@@ -33,6 +33,18 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     name="Dashboard"
                                     href="/dashboard"
                                     icon={Home}
+                                />
+                            </div>
+                            <div className="px-3 py-5">
+                                <div className="py-2">
+                                    <h3 className="text-xs font-medium tracking-wider text-slate-500 dark:text-slate-400">
+                                        Layanan
+                                    </h3>
+                                </div>
+                                <SidebarLink
+                                    name="Layanan"
+                                    href="/services"
+                                    icon={Briefcase}
                                 />
                             </div>
                         </div>

@@ -16,7 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             append: [
                 HandleInertiaRequests::class
             ]
-        );
+        )->alias([
+            'auth' => \App\Http\Middleware\Authenticate::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
 

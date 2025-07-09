@@ -17,7 +17,16 @@ class AuthController extends Controller
     }
 
     public function verify(LoginRequest $request){
-        $this->service->login($request->email, $request->password);
-        return to_route("dashboard.index");
+        try {
+            $this->service->login($request->email, $request->password);
+            return to_route("dashboard.index");
+        } catch (\Exception $e) {
+            return back()->withErrors(['email' => $e->getMessage()]);
+        }
+    }
+
+    public function logout(){
+        $this->service->logout();
+        return to_route("auth.login");
     }
 }
