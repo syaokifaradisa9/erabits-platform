@@ -20,7 +20,10 @@ class HandleInertiaRequests extends Middleware
         $successMessage = $request->session()->pull('success');
         $errorMessage = $request->session()->pull('error');
         $loggedUser = Auth::user();
-        $roles = $loggedUser->getRoleNames();
+        $roles = [];
+        if($loggedUser) {
+            $roles = $loggedUser->getRoleNames();
+        }
 
         return [
             ...parent::share($request),
