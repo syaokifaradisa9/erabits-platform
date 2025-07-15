@@ -2,11 +2,12 @@ import RootLayout from "@/Layouts/RootLayout";
 import ContentCard from "@/Components/Layouts/ContentCard";
 import Button from "@/Components/Buttons/Button";
 import { useEffect, useState } from "react";
-import { Edit, Plus, Printer } from "lucide-react";
+import { Edit, Plus, Printer, Trash2 } from "lucide-react";
 import DataTable from "@/Components/Tables/Datatable";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import DropdownButton from "@/Components/Buttons/DropdownButton";
 import FormSearch from "../../Components/Forms/FormSearch";
+import ConfirmationModal from "@/Components/Modals/ConfirmationModal";
 
 export default function ItemIndex() {
     const [dataTable, setDataTable] = useState([]);
@@ -15,6 +16,8 @@ export default function ItemIndex() {
         limit: 20,
         page: 1,
     });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
 
     async function loadDatatable() {
         let url = `${window.location.href}/datatable`;
@@ -70,6 +73,24 @@ export default function ItemIndex() {
         }
 
         window.open(url, "_blank");
+    }
+
+    function onDelete(item) {
+        setItemToDelete(item);
+        setIsModalOpen(true);
+    }
+
+    function handleConfirmDelete() {
+        if (itemToDelete) {
+            router.delete(`/items/${itemToDelete.id}`, {
+                onSuccess: () => {
+                    loadDatatable();
+                    setIsModalOpen(false);
+                    setItemToDelete(null);
+                },
+                preserveScroll: true,
+            });
+        }
     }
 
     return (
@@ -141,7 +162,10 @@ export default function ItemIndex() {
                         },
                         {
                             header: "Tarif",
-                            render: (item) => item.price,
+                            render: (item) =>
+                                new Intl.NumberFormat("id-ID").format(
+                                    item.price
+                                ),
                             footer: (
                                 <FormSearch
                                     name="price"
@@ -168,19 +192,37 @@ export default function ItemIndex() {
                         {
                             header: "Aksi",
                             render: (item) => (
-                                <>
+                                <div className="flex items-center">
                                     <Link
                                         href={`/items/${item.id}/edit`}
                                         className="text-blue-600 dark:text-blue-400 hover:underline"
                                     >
                                         <Edit className="size-4" />
                                     </Link>
-                                </>
+                                    <button
+                                        type="button"
+                                        onClick={() => onDelete(item)}
+                                        className="ml-2 text-red-600 dark:text-red-400 hover:underline"
+                                    >
+                                        <Trash2 className="size-4" />
+                                    </button>
+                                </div>
                             ),
                         },
                     ]}
                 />
             </ContentCard>
+            <ConfirmationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Konfirmasi Hapus"
+                confirmVariant="danger"
+                confirmText="Hapus"
+            >
+                Apakah Anda yakin ingin menghapus data{" "}
+                <strong>{itemToDelete?.name}</strong>?
+            </ConfirmationModal>
         </RootLayout>
     );
 }

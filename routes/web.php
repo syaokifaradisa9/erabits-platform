@@ -62,7 +62,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix("{item}")->group(function(){
             Route::get("edit", "edit")->name("edit");
             Route::put("update", "update")->name("update");
-            Route::delete("delete", "delete")->name("delete");
+            Route::delete("/", "delete")->name("delete");
         });
     });
 });
