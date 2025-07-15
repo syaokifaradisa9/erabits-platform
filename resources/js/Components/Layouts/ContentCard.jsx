@@ -11,7 +11,7 @@ export default function ContentCard({
     return (
         <div
             className={`
-                bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg md:rounded-xl border border-gray-300/90 dark:border-slate-700/50 shadow-sm shadow-[#00A7A1]/5 dark:shadow-slate-900/50
+                bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg md:rounded-xl border border-gray-300/90 dark:border-slate-700/50 shadow-sm shadow-primary/5 dark:shadow-slate-900/50
                 ${className}
             `}
         >
@@ -21,13 +21,13 @@ export default function ContentCard({
                         {backPath && (
                             <Link
                                 href={backPath}
-                                className="flex items-center justify-center -ml-1.5 size-8 rounded-lg text-[#00A7A1] hover:bg-[#E6F5F5] dark:text-teal-400 dark:hover:bg-slate-700/50 transition-colors"
+                                className="flex items-center justify-center -ml-1.5 size-8 rounded-lg text-primary hover:bg-[#E6F5F5] dark:text-teal-400 dark:hover:bg-slate-700/50 transition-colors"
                             >
                                 <ChevronLeft className="size-4 md:size-5" />
                             </Link>
                         )}
                         {title && (
-                            <h2 className="text-base md:text-lg font-semibold text-[#00A7A1] dark:text-white truncate">
+                            <h2 className="text-base font-semibold truncate md:text-lg text-primary dark:text-white">
                                 {title}
                             </h2>
                         )}

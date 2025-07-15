@@ -14,8 +14,6 @@ export default function ItemIndex() {
         search: "",
         limit: 20,
         page: 1,
-        status: "ALL",
-        condition: "ALL",
     });
 
     async function loadDatatable() {
@@ -77,12 +75,12 @@ export default function ItemIndex() {
     return (
         <RootLayout title="Data Master Kalibrator">
             <ContentCard
-                title="Data Master Kalibrator"
+                title="Data Master Item"
                 additionalButton={
                     <Button
                         className="w-full"
                         label="Tambah Data"
-                        href="/calibrator/data/create"
+                        href="/items/create"
                         icon={<Plus className="size-4" />}
                     />
                 }
