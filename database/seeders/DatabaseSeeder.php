@@ -45,5 +45,10 @@ class DatabaseSeeder extends Seeder
             'city' => 'Banjarbaru',
             'address' => 'Jl. Raya No. 1',
         ])->assignRole(UserRole::Client);
+
+        $this->call([ItemSeeder::class]);
+        $this->call([ItemChecklistSeeder::class]);
+        $this->call([ConsumableSeeder::class]);
+        $this->call([InventorySeeder::class]);
     }
 }

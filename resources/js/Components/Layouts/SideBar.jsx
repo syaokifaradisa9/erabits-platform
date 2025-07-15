@@ -42,8 +42,8 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     </h3>
                                 </div>
                                 <SidebarLink
-                                    name="Layanan"
-                                    href="/services"
+                                    name="Item"
+                                    href="/items"
                                     icon={Briefcase}
                                 />
                             </div>
@@ -62,7 +62,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                         </svg>
                                     </div>
                                     <div className="text-xs text-slate-500 dark:text-slate-400">
-                                        IT LPAFK Banjarbaru (2023 - 2025)
+                                        PT Erabits Indonesia
                                     </div>
                                 </div>
                             </div>

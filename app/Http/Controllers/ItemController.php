@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use Inertia\Inertia;
 use App\Services\ItemService;
-use App\Http\Requests\ItemRequest;
-use Illuminate\Support\Facades\Auth;
-use App\Datatables\ItemDatatableService;
 use App\DataTransferObjects\ItemDTO;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\Item\ItemRequest;
+use App\Datatables\ItemDatatableService;
 use App\Http\Requests\Common\DatatableRequest;
 
 class ItemController extends Controller

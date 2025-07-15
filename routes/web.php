@@ -56,9 +56,10 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix("items")->name("items.")->controller(ItemController::class)->group(function () {
         Route::get("/", "index")->name("index");
+        Route::get("datatable", "datatable")->name("datatable");
         Route::get("create", "create")->name("create");
         Route::post("store", "store")->name("store");
-        Route::prefix("{consumable}")->group(function(){
+        Route::prefix("{item}")->group(function(){
             Route::get("edit", "edit")->name("edit");
             Route::put("update", "update")->name("update");
             Route::delete("delete", "delete")->name("delete");
