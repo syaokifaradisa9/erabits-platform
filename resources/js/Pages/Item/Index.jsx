@@ -165,6 +165,19 @@ export default function ItemIndex() {
                             header: "Jumlah Checklist",
                             render: (item) => item.checklist_count,
                         },
+                        {
+                            header: "Aksi",
+                            render: (item) => (
+                                <>
+                                    <Link
+                                        href={`/items/${item.id}/edit`}
+                                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                                    >
+                                        <Edit className="size-4" />
+                                    </Link>
+                                </>
+                            ),
+                        },
                     ]}
                 />
             </ContentCard>

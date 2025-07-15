@@ -23,7 +23,6 @@ class ItemService{
 
             foreach($dto->toChecklistsArray() as $checklist){
                 $checklist['item_id'] = $item->id;
-
                 $this->itemChecklistRepository->store($checklist);
             }
 

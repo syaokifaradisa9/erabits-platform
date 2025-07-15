@@ -13,26 +13,26 @@ export default function ItemCreate({ item, itemServices }) {
         name: item?.name || "",
         price: item?.price || "",
         maintenance_count: item?.maintenance_count || "",
-        item_checklists: item?.item_checklists || [],
+        checklists: item?.checklists || [],
     });
 
     const addItemChecklist = () => {
-        setData("item_checklists", [
-            ...data.item_checklists,
+        setData("checklists", [
+            ...data.checklists,
             { name: "", description: "" },
         ]);
     };
 
     const removeItemChecklist = (index) => {
-        const newItemChecklists = [...data.item_checklists];
+        const newItemChecklists = [...data.checklists];
         newItemChecklists.splice(index, 1);
-        setData("item_checklists", newItemChecklists);
+        setData("checklists", newItemChecklists);
     };
 
     const handleChecklistChange = (index, field, value) => {
-        const newItemChecklists = [...data.item_checklists];
+        const newItemChecklists = [...data.checklists];
         newItemChecklists[index][field] = value;
-        setData("item_checklists", newItemChecklists);
+        setData("checklists", newItemChecklists);
     };
 
     function onSubmit(e) {
@@ -104,17 +104,15 @@ export default function ItemCreate({ item, itemServices }) {
                     </div>
 
                     <div className="mt-6">
-                        {data.item_checklists.map((checklist, index) => (
+                        {data.checklists.map((checklist, index) => (
                             <div
                                 key={index}
                                 className="grid gap-4 pb-4 mb-4 rounded-lg shadow-sm md:grid-cols-2"
                             >
                                 <FormInput
-                                    name={`item_checklists[${index}].name`}
+                                    name={`checklists[${index}].name`}
                                     label="Nama Checklist"
-                                    error={
-                                        errors[`item_checklists.${index}.name`]
-                                    }
+                                    error={errors[`checklists.${index}.name`]}
                                     placeholder="Isikan Nama Checklist"
                                     value={checklist.name}
                                     onChange={(e) =>
@@ -126,11 +124,11 @@ export default function ItemCreate({ item, itemServices }) {
                                     }
                                 />
                                 <FormInput
-                                    name={`item_checklists[${index}].description`}
+                                    name={`checklists[${index}].description`}
                                     label="Deskripsi Checklist"
                                     error={
                                         errors[
-                                            `item_checklists.${index}.description`
+                                            `checklists.${index}.description`
                                         ]
                                     }
                                     placeholder="Isikan Deskripsi Checklist"

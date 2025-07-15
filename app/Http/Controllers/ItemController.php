@@ -41,7 +41,9 @@ class ItemController extends Controller
     }
 
     public function edit(Item $item){
-        return Inertia::render("Item/Create", compact("item"));
+        $itemServices = $this->serviceItemTypeService->getActiveService();
+        $item->load("checklists");
+        return Inertia::render("Item/Create", compact("item", "itemServices"));
     }
 
     public function update(ItemRequest $request, Item $item){
