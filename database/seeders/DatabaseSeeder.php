@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enum\ServiceItemTypeEnum;
 use App\Enum\UserRole;
+use App\Models\ServiceItemType;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -15,6 +17,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        foreach([
+            ServiceItemTypeEnum::Alkes,
+            ServiceItemTypeEnum::Sarpras,
+            ServiceItemTypeEnum::Tech,
+            ServiceItemTypeEnum::Otomotive
+        ] as $type){
+            ServiceItemType::create(['name' => $type]);
+        };
+
         foreach([
             UserRole::Superadmin,
             UserRole::Admin,
@@ -45,6 +56,19 @@ class DatabaseSeeder extends Seeder
             'city' => 'Banjarbaru',
             'address' => 'Jl. Raya No. 1',
         ])->assignRole(UserRole::Client);
+
+        $rolesToSeed = [
+            UserRole::Admin,
+            UserRole::Manager,
+            UserRole::Officer,
+            UserRole::Finance,
+        ];
+
+        foreach ($rolesToSeed as $role) {
+            User::factory()->count(5)->create()->each(function ($user) use ($role) {
+                $user->assignRole($role);
+            });
+        }
 
         $this->call([ItemSeeder::class]);
         $this->call([ItemChecklistSeeder::class]);

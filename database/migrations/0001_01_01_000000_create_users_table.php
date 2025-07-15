@@ -23,8 +23,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
 
-            $table->string('province');
-            $table->string('city');
+            $table->string('province')->nullable();
+            $table->string('city')->nullable();
             $table->text("address")->nullable();
 
             $table->foreignIdFor(ServiceItemType::class)->nullable()->constrained()->cascadeOnDelete()->cascadeOnUpdate();

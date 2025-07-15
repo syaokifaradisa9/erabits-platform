@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enum\ServiceItemTypeEnum;
+use App\Models\ServiceItemType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -29,6 +31,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'service_item_type_id' => rand(1, ServiceItemType::count()), // Assuming this is nullable
         ];
     }
 

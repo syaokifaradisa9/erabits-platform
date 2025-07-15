@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix("users")->name("users.")->controller(UserController::class)->group(function () {
         Route::get("/", "index")->name("index");
         Route::get("create", "create")->name("create");
+        Route::get("datatable", "datatable")->name("datatable");
         Route::post("store", "store")->name("store");
         Route::prefix("{consumable}")->group(function(){
             Route::get("edit", "edit")->name("edit");

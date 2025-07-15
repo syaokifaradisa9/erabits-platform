@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -27,7 +28,8 @@ class UserController extends Controller
     }
 
     public function create(){
-        return Inertia::render("User/Create");
+        $roles = Role::where('name', '!=', 'Superadmin')->get();
+        return Inertia::render("User/Create", compact('roles'));
     }
 
     public function store(UserRequest $request){
@@ -40,7 +42,9 @@ class UserController extends Controller
     }
 
     public function edit(User $user){
-        return Inertia::render("User/Create", compact("user"));
+        $roles = Role::where('name', '!=', 'Superadmin')->get();
+        $user->load('roles');
+        return Inertia::render("User/Create", compact("user", "roles"));
     }
 
     public function update(UserRequest $request, User $user){
@@ -61,14 +65,6 @@ class UserController extends Controller
     }
 
     public function datatable(DatatableRequest $request){
-        return $this->datatableService->getDatatable($request, $this->loggedUser);
-    }
-
-    public function printPdf(DatatableRequest $request){
-        return $this->datatableService->printPdf($request, $this->loggedUser);
-    }
-
-    public function printExcel(DatatableRequest $request){
-        return $this->datatableService->printExcel($request, $this->loggedUser);
+        return $this->datatableService->getDatatable($request);
     }
 }

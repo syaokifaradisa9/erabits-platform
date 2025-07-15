@@ -9,17 +9,22 @@ class EloquentUserRepository implements UserRepository{
         protected User $model,
     ){}
 
-    public function store($data){
+    public function store(array $data): User
+    {
         return $this->model->create($data);
     }
 
-    public function update($id, $data){
-        $this->model->where("id", $id)->update($data);
-        return $this->model->find($id);
+    public function update(int $id, array $data): User
+    {
+        $user = $this->model->findOrFail($id);
+        $user->update($data);
+        return $user;
     }
 
-    public function delete($id){
-        return $this->model->where("id", $id)->delete();
+    public function delete(int $id): bool
+    {
+        $user = $this->model->findOrFail($id);
+        return $user->delete();
     }
 }
 
