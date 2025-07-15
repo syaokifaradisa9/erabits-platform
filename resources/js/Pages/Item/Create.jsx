@@ -4,9 +4,12 @@ import RootLayout from "@/Layouts/RootLayout";
 import FormInput from "@/Components/Forms/FormInput";
 import Button from "@/Components/Buttons/Button";
 import { Save, Plus, Trash2 } from "lucide-react";
+import CheckRoles from "@/utils/CheckRoles";
+import FormSelect from "@/Components/Forms/FormSelect";
 
-export default function ItemCreate({ item }) {
+export default function ItemCreate({ item, itemServices }) {
     const { data, setData, post, put, processing, errors } = useForm({
+        service_item_type_id: item?.service_item_type_id || "",
         name: item?.name || "",
         price: item?.price || "",
         maintenance_count: item?.maintenance_count || "",
@@ -46,7 +49,32 @@ export default function ItemCreate({ item }) {
         <RootLayout title="Tambah Data Item Maintenance">
             <ContentCard title="Tambah Data Item Maintenance" backPath="/items">
                 <form method="post" onSubmit={onSubmit}>
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <CheckRoles
+                        roles={["Superadmin", "Admin"]}
+                        children={
+                            <FormSelect
+                                label="Jenis Layanan"
+                                placeholder="Pilih Jenis Layanan"
+                                name="service_item_type_id"
+                                className="mb-4"
+                                options={itemServices.map((data) => {
+                                    return {
+                                        value: data.id,
+                                        label: `${data.name} - ${data.description}`,
+                                    };
+                                })}
+                                value={data.service_item_type_id}
+                                onChange={(e) =>
+                                    setData(
+                                        "service_item_type_id",
+                                        e.target.value
+                                    )
+                                }
+                                error={errors.service_item_type_id}
+                            />
+                        }
+                    />
+                    <div className="grid gap-4 md:grid-cols-3">
                         <FormInput
                             name="name"
                             label="Nama Item"

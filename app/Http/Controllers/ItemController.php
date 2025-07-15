@@ -9,6 +9,7 @@ use App\DataTransferObjects\ItemDTO;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Item\ItemRequest;
 use App\Datatables\ItemDatatableService;
+use App\Services\ServiceItemTypeService;
 use App\Http\Requests\Common\DatatableRequest;
 
 class ItemController extends Controller
@@ -17,6 +18,7 @@ class ItemController extends Controller
     public function __construct(
         protected ItemService $service,
         protected ItemDatatableService $datatableService,
+        protected ServiceItemTypeService $serviceItemTypeService
     ){
         $this->loggedUser = Auth::user();
     }
@@ -26,7 +28,8 @@ class ItemController extends Controller
     }
 
     public function create(){
-        return Inertia::render("Item/Create");
+        $itemServices = $this->serviceItemTypeService->getActiveService();
+        return Inertia::render("Item/Create", compact("itemServices"));
     }
 
     public function store(ItemRequest $request){
