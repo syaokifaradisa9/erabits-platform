@@ -58,6 +58,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     href="/users"
                                     icon={Users}
                                 />
+                                <SidebarLink
+                                    name="Klien"
+                                    href="/clients"
+                                    icon={Users}
+                                />
                             </div>
                         </div>
                         <div className="flex-shrink-0 p-3">

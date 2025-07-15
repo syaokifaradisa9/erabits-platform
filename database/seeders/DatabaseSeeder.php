@@ -70,6 +70,13 @@ class DatabaseSeeder extends Seeder
             });
         }
 
+        User::factory()->count(5)->create([
+            'province' => 'Kalimantan Selatan',
+            'city' => 'Banjarbaru',
+        ])->each(function ($user) {
+            $user->assignRole(UserRole::Client);
+        });
+
         $this->call([ItemSeeder::class]);
         $this->call([ItemChecklistSeeder::class]);
         $this->call([ConsumableSeeder::class]);
