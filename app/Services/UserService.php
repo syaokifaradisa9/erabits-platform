@@ -17,14 +17,9 @@ class UserService
     {
         DB::beginTransaction();
         try {
-            $userData = [
-                'name' => $dto->name,
-                'email' => $dto->email,
-                'phone' => $dto->phone,
-                'password' => Hash::make($dto->password),
-            ];
-            $user = $this->repository->store($userData);
-            $user->assignRole($dto->role);
+            $user = $this->repository->store($dto->toArray());
+
+            $user->syncRoles([$dto->role]);
             DB::commit();
             return $user;
         } catch (\Exception $e) {
@@ -37,18 +32,9 @@ class UserService
     {
         DB::beginTransaction();
         try {
-            $userData = [
-                'name' => $dto->name,
-                'email' => $dto->email,
-                'phone' => $dto->phone,
-            ];
+            $user = $this->repository->update($userId, $dto->toArray());
+            $user->syncRoles([$dto->role]);
 
-            if ($dto->password) {
-                $userData['password'] = Hash::make($dto->password);
-            }
-
-            $user = $this->repository->update($userId, $userData);
-            $user->syncRoles($dto->role);
             DB::commit();
             return $user;
         } catch (\Exception $e) {

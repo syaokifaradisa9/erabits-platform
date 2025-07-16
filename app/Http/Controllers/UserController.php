@@ -7,7 +7,9 @@ use App\DataTransferObjects\UserDTO;
 use App\Http\Requests\Common\DatatableRequest;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
+use App\Services\ServiceItemTypeService;
 use App\Services\UserService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
@@ -18,6 +20,7 @@ class UserController extends Controller
     public function __construct(
         protected UserService $service,
         protected UserDatatableService $datatableService,
+        protected ServiceItemTypeService $serviceItemTypeService
     )
     {
         $this->loggedUser = Auth::user();
@@ -29,7 +32,8 @@ class UserController extends Controller
 
     public function create(){
         $roles = Role::where('name', '!=', 'Superadmin')->get();
-        return Inertia::render("User/Create", compact('roles'));
+        $serviceItemTypes = $this->serviceItemTypeService->getActiveService();
+        return Inertia::render("User/Create", compact('serviceItemTypes', 'roles'));
     }
 
     public function store(UserRequest $request){
@@ -37,14 +41,17 @@ class UserController extends Controller
             UserDTO::fromAppRequest($request)
         );
 
+        $user->assignRole($request->input('roles'));
+
         return to_route("users.index")
             ->with("success", "Berhasil menambahkan data $user->name");
     }
 
     public function edit(User $user){
         $roles = Role::where('name', '!=', 'Superadmin')->get();
+        $serviceItemTypes = $this->serviceItemTypeService->getActiveService();
         $user->load('roles');
-        return Inertia::render("User/Create", compact("user", "roles"));
+        return Inertia::render("User/Create", compact("user", "serviceItemTypes", "roles"));
     }
 
     public function update(UserRequest $request, User $user){

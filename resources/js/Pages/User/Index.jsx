@@ -2,9 +2,9 @@ import RootLayout from "@/Layouts/RootLayout";
 import ContentCard from "@/Components/Layouts/ContentCard";
 import Button from "@/Components/Buttons/Button";
 import { useEffect, useState } from "react";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Edit, Plus, Trash2, KeyRound } from "lucide-react";
 import DataTable from "@/Components/Tables/Datatable";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import FormSearch from "@/Components/Forms/FormSearch";
 import ConfirmationModal from "@/Components/Modals/ConfirmationModal";
 
@@ -19,7 +19,7 @@ export default function UserIndex() {
     const [userToDelete, setUserToDelete] = useState(null);
 
     async function loadDatatable() {
-        let url = `${window.location.href}/datatable`;
+        let url = `/users/datatable`;
         let paramsKey = Object.keys(params);
         for (let i = 0; i < paramsKey.length; i++) {
             url += i === 0 ? `?` : `&`;
@@ -52,6 +52,14 @@ export default function UserIndex() {
 
     function handleConfirmDelete() {
         if (userToDelete) {
+            router.delete(`/users/${userToDelete.id}/delete`, {
+                onSuccess: () => {
+                    loadDatatable();
+                    setIsModalOpen(false);
+                    setUserToDelete(null);
+                },
+                preserveScroll: true,
+            });
         }
     }
 
