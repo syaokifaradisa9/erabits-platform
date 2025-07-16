@@ -2,7 +2,7 @@ import RootLayout from "@/Layouts/RootLayout";
 import ContentCard from "@/Components/Layouts/ContentCard";
 import Button from "@/Components/Buttons/Button";
 import { useEffect, useState } from "react";
-import { Edit, Plus, Trash2, KeyRound } from "lucide-react";
+import { Edit, Plus, Trash2 } from "lucide-react";
 import DataTable from "@/Components/Tables/Datatable";
 import { Link, router } from "@inertiajs/react";
 import FormSearch from "@/Components/Forms/FormSearch";

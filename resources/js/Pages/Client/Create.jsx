@@ -3,50 +3,46 @@ import ContentCard from "@/Components/Layouts/ContentCard";
 import Button from "@/Components/Buttons/Button";
 import { useForm } from "@inertiajs/react";
 import FormInput from "@/Components/Forms/FormInput";
-import FormSelect from "@/Components/Forms/FormSelect";
 import FormTextArea from "@/Components/Forms/FormTextArea";
 import { Save } from "lucide-react";
 
-export default function UserCreate({ user, serviceItemTypes, roles }) {
+export default function ClientCreate({ client }) {
     const { data, setData, post, put, errors, processing } = useForm({
-        name: user?.name || "",
-        email: user?.email || "",
-        phone: user?.phone || "",
-        province: user?.province || "",
-        city: user?.city || "",
-        address: user?.address || "",
-        service_item_type_id: user?.service_item_type_id || "",
-        role: user?.roles[0]?.name || "",
+        name: client?.name || "",
+        email: client?.email || "",
+        phone: client?.phone || "",
+        province: client?.province || "",
+        city: client?.city || "",
+        address: client?.address || "",
         password: "",
         password_confirmation: "",
     });
 
     function onSubmit(e) {
         e.preventDefault();
-        if (user) {
-            put(`/users/${user.id}/update`);
+        if (client) {
+            put(`/clients/${client.id}/update`);
         } else {
-            post("/users/store");
+            post("/clients/store");
         }
     }
 
     return (
-        <RootLayout title={`${user ? "Edit" : "Tambah"} Pengguna`}>
+        <RootLayout title={`${client ? "Edit" : "Tambah"} Klien`}>
             <ContentCard
-                title={`${user ? "Edit" : "Tambah"} Pengguna`}
-                backPath="/users"
+                title={`${client ? "Edit" : "Tambah"} Klien`}
+                backPath="/clients"
             >
                 <form onSubmit={onSubmit}>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormInput
-                            placeholder="Masukkan nama lengkap"
                             label="Nama"
                             name="name"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
                             error={errors.name}
+                            placeholder="Masukkan nama klien"
                         />
-
                         <FormInput
                             prefix="+62"
                             label="Telepon"
@@ -55,32 +51,6 @@ export default function UserCreate({ user, serviceItemTypes, roles }) {
                             onChange={(e) => setData("phone", e.target.value)}
                             error={errors.phone}
                             placeholder="Masukkan nomor telepon"
-                        />
-                        <FormSelect
-                            label="Layanan"
-                            name="service_item_type_id"
-                            value={data.service_item_type_id}
-                            onChange={(e) =>
-                                setData("service_item_type_id", e.target.value)
-                            }
-                            error={errors.service_item_type_id}
-                            options={serviceItemTypes.map((type) => ({
-                                value: type.id,
-                                label: type.name,
-                            }))}
-                            placeholder="Pilih jenis layanan"
-                        />
-                        <FormSelect
-                            label="Hak Akses"
-                            name="role"
-                            value={data.role}
-                            onChange={(e) => setData("role", e.target.value)}
-                            error={errors.role}
-                            options={roles.map((role) => ({
-                                value: role.name,
-                                label: role.name,
-                            }))}
-                            placeholder="Pilih hak akses"
                         />
                         <FormInput
                             label="Provinsi"
@@ -107,19 +77,18 @@ export default function UserCreate({ user, serviceItemTypes, roles }) {
                         value={data.address}
                         onChange={(e) => setData("address", e.target.value)}
                         error={errors.address}
-                        placeholder="Masukkan alamat lengkap"
                         className="mt-4"
+                        placeholder="Masukkan alamat lengkap"
                     />
-
                     <div className="grid grid-cols-1 gap-4 mt-4 md:grid-cols-3">
                         <FormInput
-                            placeholder="Masukkan email"
                             label="Email"
                             name="email"
                             type="email"
                             value={data.email}
                             onChange={(e) => setData("email", e.target.value)}
                             error={errors.email}
+                            placeholder="Masukkan email klien"
                         />
                         <FormInput
                             label="Password"
@@ -130,6 +99,7 @@ export default function UserCreate({ user, serviceItemTypes, roles }) {
                                 setData("password", e.target.value)
                             }
                             error={errors.password}
+                            placeholder="Masukkan password"
                         />
                         <FormInput
                             label="Konfirmasi Password"
@@ -139,15 +109,18 @@ export default function UserCreate({ user, serviceItemTypes, roles }) {
                             onChange={(e) =>
                                 setData("password_confirmation", e.target.value)
                             }
+                            placeholder="Konfirmasi password"
                         />
                     </div>
-                    <Button
-                        className="w-full mt-4"
-                        type="submit"
-                        label={user ? "Simpan Perubahan" : "Simpan"}
-                        isLoading={processing}
-                        icon={<Save className="size-4" />}
-                    />
+                    <div className="flex justify-end mt-4">
+                        <Button
+                            type="submit"
+                            label={client ? "Simpan Perubahan" : "Simpan"}
+                            isLoading={processing}
+                            className="w-full"
+                            icon={<Save className="size-4" />}
+                        />
+                    </div>
                 </form>
             </ContentCard>
         </RootLayout>
