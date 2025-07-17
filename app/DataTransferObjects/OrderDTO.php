@@ -17,7 +17,7 @@ class OrderDTO
             items: collect($request->items)->map(function ($item) {
                 return [
                     'id' => $item['id'],
-                    'quantity' => $item['quantity']
+                    'quantity' => (int) $item['quantity']
                 ];
             })->toArray()
         );

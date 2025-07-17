@@ -31,25 +31,26 @@ class OrderService{
 
             foreach($dto->items as $itemData){
                 $item = $this->itemRepository->find($itemData['id']);
+                for($k = 0; $k < $itemData['quantity']; $k++){
+                    $itemOrder = $this->itemOrderRepository->store([
+                        'order_id' => $order->id,
+                        'item_id' => $item->id,
+                        'name' => $item->name,
+                        'price' => $item->price
+                    ]);
 
-                $itemOrder = $this->itemOrderRepository->store([
-                    'order_id' => $order->id,
-                    'item_id' => $item->id,
-                    'name' => $item->name,
-                    'price' => $item->price
-                ]);
+                    $maintenanceCount = $item->maintenance_count;
+                    if($maintenanceCount > 0){
+                        $intervalMonths = 12 / $maintenanceCount;
+                        $currentDate = Carbon::now();
 
-                $maintenanceCount = $item->maintenance_count;
-                if($maintenanceCount > 0){
-                    $intervalMonths = 12 / $maintenanceCount;
-                    $currentDate = Carbon::now();
-
-                    for ($j = 0; $j < $maintenanceCount; $j++) {
-                        $maintenanceDate = $currentDate->copy()->addMonths($intervalMonths * ($j + 1));
-                        $this->itemOrderMaintenanceRepository->store([
-                            'item_order_id' => $itemOrder->id,
-                            'estimation_date' => $maintenanceDate->toDateString(),
-                        ]);
+                        for ($j = 0; $j < $maintenanceCount; $j++) {
+                            $maintenanceDate = $currentDate->copy()->addMonths($intervalMonths * ($j + 1));
+                            $this->itemOrderMaintenanceRepository->store([
+                                'item_order_id' => $itemOrder->id,
+                                'estimation_date' => $maintenanceDate->toDateString(),
+                            ]);
+                        }
                     }
                 }
             }
