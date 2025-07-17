@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -78,5 +79,10 @@ Route::middleware('auth')->group(function () {
             Route::put("update", "update")->name("update");
             Route::delete("delete", "delete")->name("delete");
         });
+    });
+
+    Route::prefix("orders")->name("orders.")->controller(OrderController::class)->group(function () {
+        Route::get("create", "create")->name("create");
+        Route::post("store", "store")->name("store");
     });
 });
