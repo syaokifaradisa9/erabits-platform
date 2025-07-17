@@ -15,22 +15,27 @@ export default function Create({ items, serviceItemTypes }) {
     const [search, setSearch] = useState("");
     const [hideZero, setHideZero] = useState(false);
 
+    const [displayItems, setDisplayItems] = useState(
+        items.map((item) => ({ ...item, quantity: 0, notes: "" }))
+    );
+
     const { data, setData, post, processing, errors } = useForm({
-        items: items.map((item) => ({
-            ...item,
-            quantity: 0,
-            notes: "",
-        })),
+        items: [],
     });
 
     const handleQuantityChange = (index, value) => {
-        const updatedItems = [...data.items];
-        updatedItems[index].quantity = value;
-        setData("items", updatedItems);
+        const newDisplayItems = [...displayItems];
+        newDisplayItems[index].quantity = value;
+        setDisplayItems(newDisplayItems);
+
+        const itemsToOrder = newDisplayItems.filter(
+            (item) => Number(item.quantity) > 0
+        );
+        setData("items", itemsToOrder);
     };
 
     const filteredItems = useMemo(() => {
-        return data.items
+        return displayItems
             .map((item, index) => ({ ...item, originalIndex: index }))
             .filter(
                 (item) =>
@@ -39,18 +44,23 @@ export default function Create({ items, serviceItemTypes }) {
                     item.name.toLowerCase().includes(search.toLowerCase()) &&
                     (!hideZero || item.quantity > 0)
             );
-    }, [data.items, activeTab, search, hideZero]);
+    }, [displayItems, activeTab, search, hideZero]);
 
     const total = useMemo(() => {
-        return data.items.reduce(
+        return displayItems.reduce(
             (acc, item) => acc + item.price * (item.quantity || 0),
             0
         );
-    }, [data.items]);
+    }, [displayItems]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post("/orders/store");
+        post("/orders/store", {
+            items: data.items.map((item) => ({
+                id: item.id,
+                quantity: item.quantity,
+            })),
+        });
     };
 
     return (

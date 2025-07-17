@@ -10,6 +10,8 @@ use App\Http\Requests\OrderRequest;
 use App\Services\ServiceItemTypeService;
 use Illuminate\Support\Facades\Auth;
 use App\DataTransferObjects\OrderDTO;
+use App\Datatables\OrderDatatableService;
+use App\Http\Requests\Common\DatatableRequest;
 
 class OrderController extends Controller
 {
@@ -17,13 +19,18 @@ class OrderController extends Controller
     public function __construct(
         protected OrderService $orderService,
         protected ItemService $itemService,
-        protected ServiceItemTypeService $serviceItemTypeService
+        protected ServiceItemTypeService $serviceItemTypeService,
+        protected OrderDatatableService $orderDatatableService
     ){
         $this->loggedUser = Auth::user();
     }
 
     public function index(){
         return Inertia::render("Order/Index");
+    }
+
+    public function datatable(DatatableRequest $request){
+        return $this->orderDatatableService->getDatatable($request);
     }
 
     public function create(){

@@ -14,7 +14,12 @@ class OrderDTO
     public static function fromAppRequest(OrderRequest $request): OrderDTO
     {
         return new self(
-            items: $request->validated("items"),
+            items: collect($request->items)->map(function ($item) {
+                return [
+                    'id' => $item['id'],
+                    'quantity' => $item['quantity']
+                ];
+            })->toArray()
         );
     }
 }

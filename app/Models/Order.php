@@ -28,4 +28,8 @@ class Order extends Model
     {
         return $this->belongsTo(User::class, 'reserved_user_id');
     }
+
+    public function itemOrders(){
+        return $this->hasMany(ItemOrder::class);
+    }
 }

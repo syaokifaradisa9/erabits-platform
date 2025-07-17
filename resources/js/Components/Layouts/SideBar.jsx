@@ -1,4 +1,4 @@
-import { Briefcase, Home, Users } from "lucide-react";
+import { Briefcase, Home, ShoppingBag, Users } from "lucide-react";
 import SidebarLink from "./SideBarLink";
 
 export default function Sidebar({ isOpen, setIsOpen }) {
@@ -48,8 +48,8 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                 />
                                 <SidebarLink
                                     name="Permintaan"
-                                    href="/orders/create"
-                                    icon={Briefcase}
+                                    href="/orders"
+                                    icon={ShoppingBag}
                                 />
                             </div>
                             <div className="px-3 py-5">

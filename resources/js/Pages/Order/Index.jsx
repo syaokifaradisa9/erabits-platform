@@ -1,0 +1,159 @@
+import RootLayout from "@/Layouts/RootLayout";
+import ContentCard from "@/Components/Layouts/ContentCard";
+import Button from "@/Components/Buttons/Button";
+import { useEffect, useState } from "react";
+import { Edit, Plus, Trash2 } from "lucide-react";
+import DataTable from "@/Components/Tables/Datatable";
+import { Link, router } from "@inertiajs/react";
+import FormSearch from "@/Components/Forms/FormSearch";
+import ConfirmationModal from "@/Components/Modals/ConfirmationModal";
+
+export default function OrderIndex() {
+    const [dataTable, setDataTable] = useState([]);
+    const [params, setParams] = useState({
+        search: "",
+        limit: 20,
+        page: 1,
+    });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [orderToDelete, setOrderToDelete] = useState(null);
+
+    async function loadDatatable() {
+        let url = `/orders/datatable`;
+        let paramsKey = Object.keys(params);
+        for (let i = 0; i < paramsKey.length; i++) {
+            url += i === 0 ? `?` : `&`;
+            url += `${paramsKey[i]}=${params[paramsKey[i]]}`;
+        }
+
+        const response = await fetch(url);
+        const data = await response.json();
+        setDataTable(data);
+    }
+
+    useEffect(() => {
+        loadDatatable();
+    }, [params]);
+
+    function onChangePage(e) {
+        e.preventDefault();
+        const url = new URL(e.target.href);
+        setParams({ ...params, page: url.searchParams.get("page") });
+    }
+
+    function onParamsChange(e) {
+        setParams({ ...params, page: 1, [e.target.name]: e.target.value });
+    }
+
+    function onDelete(order) {
+        setOrderToDelete(order);
+        setIsModalOpen(true);
+    }
+
+    function handleConfirmDelete() {
+        if (orderToDelete) {
+            router.delete(`/orders/${orderToDelete.id}/delete`, {
+                onSuccess: () => {
+                    loadDatatable();
+                    setIsModalOpen(false);
+                    setOrderToDelete(null);
+                },
+                preserveScroll: true,
+            });
+        }
+    }
+
+    const columns = [
+        {
+            header: "Nomor Order",
+            render: (order) => order.order_number ?? "-",
+            footer: (
+                <FormSearch
+                    name="order_number"
+                    onChange={onParamsChange}
+                    placeholder="Filter Nomor Order"
+                />
+            ),
+        },
+        {
+            header: "Klien",
+            render: (order) => order.client.name,
+            footer: (
+                <FormSearch
+                    name="client"
+                    onChange={onParamsChange}
+                    placeholder="Filter Klien"
+                />
+            ),
+        },
+        {
+            header: "Jumlah Permintaan",
+            render: (order) => order.item_count,
+        },
+        {
+            header: "Status",
+            render: (order) => order.status,
+            footer: (
+                <FormSearch
+                    name="status"
+                    onChange={onParamsChange}
+                    placeholder="Filter Status"
+                />
+            ),
+        },
+        {
+            header: "Aksi",
+            render: (order) => (
+                <div className="flex items-center">
+                    <Link
+                        href={`/orders/${order.id}/edit`}
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                        <Edit className="size-4" />
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={() => onDelete(order)}
+                        className="ml-2 text-red-600 dark:text-red-400 hover:underline"
+                    >
+                        <Trash2 className="size-4" />
+                    </button>
+                </div>
+            ),
+        },
+    ];
+
+    return (
+        <RootLayout title="Manajemen Order">
+            <ContentCard
+                title="Data Order"
+                additionalButton={
+                    <Button
+                        label="Tambah Order"
+                        href="/orders/create"
+                        icon={<Plus className="size-4" />}
+                    />
+                }
+            >
+                <DataTable
+                    onChangePage={onChangePage}
+                    onParamsChange={onParamsChange}
+                    limit={params.limit}
+                    dataTable={dataTable}
+                    columns={columns}
+                />
+            </ContentCard>
+            <ConfirmationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Konfirmasi Hapus"
+                confirmVariant="danger"
+                confirmText="Hapus"
+            >
+                Apakah Anda yakin ingin menghapus order{" "}
+                <strong>{orderToDelete?.order_number}</strong>?
+            </ConfirmationModal>
+        </RootLayout>
+    );
+}
