@@ -4,20 +4,20 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use App\Models\Order;
+use App\Services\ItemService;
 use App\Services\OrderService;
 use App\Http\Requests\OrderRequest;
+use App\Services\ServiceItemTypeService;
 use Illuminate\Support\Facades\Auth;
 use App\DataTransferObjects\OrderDTO;
-use App\Datatables\OrderDatatableService;
-use App\Http\Requests\Common\DatatableRequest;
-use App\Http\Requests\Order\OrderConfirmationRequest;
 
 class OrderController extends Controller
 {
     private $loggedUser;
     public function __construct(
-        protected OrderService $service,
-        protected OrderDatatableService $datatableService,
+        protected OrderService $orderService,
+        protected ItemService $itemService,
+        protected ServiceItemTypeService $serviceItemTypeService
     ){
         $this->loggedUser = Auth::user();
     }
@@ -27,16 +27,18 @@ class OrderController extends Controller
     }
 
     public function create(){
-        return Inertia::render("Order/Create");
+        $items = $this->itemService->getAllItems();
+        $serviceItemTypes = $this->serviceItemTypeService->getActiveService();
+        return Inertia::render("Order/Create", compact("items", "serviceItemTypes"));
     }
 
     public function store(OrderRequest $request){
-        $this->service->store(
+        $this->orderService->store(
             OrderDTO::fromAppRequest($request),
             $this->loggedUser
         );
 
-        return to_route("orders.index")->with("success", "Berhasil mengajukan order");
+        return to_route("dashboard.index")->with("success", "Berhasil mengajukan order");
     }
 
     public function edit(Order $order){
@@ -44,28 +46,17 @@ class OrderController extends Controller
     }
 
     public function delete(Order $order){
-        $this->service->delete($order->id);
+        $this->orderService->delete($order->id);
         return to_route("orders.index")->with("success", "Berhasil menghapus data");
     }
 
-    public function confirm(OrderConfirmationRequest $request){
-        $this->service->confirm(
-            $request->id,
-            $this->loggedUser
-        );
+    public function confirm($request){
+        // TODO: Implement Request Validation
+        // $this->orderService->confirm(
+        //     $request->id,
+        //     $this->loggedUser
+        // );
 
         return to_route("orders.index")->with("success", "Berhasil mengonfirmasi order");
-    }
-
-    public function datatable(DatatableRequest $request){
-        return $this->datatableService->getDatatable($request, $this->loggedUser);
-    }
-
-    public function printPdf(DatatableRequest $request){
-        return $this->datatableService->printPdf($request, $this->loggedUser);
-    }
-
-    public function printExcel(DatatableRequest $request){
-        return $this->datatableService->printExcel($request, $this->loggedUser);
     }
 }

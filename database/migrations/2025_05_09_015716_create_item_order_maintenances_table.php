@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignIdFor(ItemOrder::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
 
             $table->date("estimation_date");
-            $table->date("finish_date");
+            $table->date("finish_date")->nullable();
             $table->timestamps();
         });
     }

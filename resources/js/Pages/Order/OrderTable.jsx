@@ -1,14 +1,11 @@
-import { Search } from "lucide-react";
 import { sumList } from "@/utils/ListCalculations";
 
 export default function OrderTable({
     items,
     quantities,
-    descriptions = null,
     onChange,
     total,
     showCategory = false,
-    onSearch = null,
 }) {
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("id-ID", {
@@ -17,8 +14,6 @@ export default function OrderTable({
             minimumFractionDigits: 0,
         }).format(amount);
     };
-
-    const hasDescriptions = descriptions != null;
 
     return (
         <>
@@ -55,7 +50,7 @@ export default function OrderTable({
                         >
                             {showCategory && (
                                 <td className="px-4 py-3 text-xs text-gray-700 md:text-sm dark:text-slate-300">
-                                    {item.category.name}
+                                    {item.service_item_type.name}
                                 </td>
                             )}
                             <td className="px-4 py-3 text-xs text-gray-700 md:text-sm dark:text-slate-300">
@@ -103,7 +98,6 @@ export default function OrderTable({
                         <td className="px-4 py-3 text-xs font-medium text-right text-gray-900 md:text-sm dark:text-white">
                             {formatCurrency(total)}
                         </td>
-                        {hasDescriptions && <td />}
                     </tr>
                 </tfoot>
             </table>

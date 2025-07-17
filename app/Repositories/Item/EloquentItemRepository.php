@@ -9,6 +9,14 @@ class EloquentItemRepository implements ItemRepository{
         protected Item $model,
     ){}
 
+    public function all(){
+        return $this->model->with('serviceItemType')->get();
+    }
+
+    public function find($id){
+        return $this->model->with('serviceItemType')->find($id);
+    }
+
     public function store($data){
         return $this->model->create($data);
     }

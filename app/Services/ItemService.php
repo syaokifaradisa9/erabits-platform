@@ -70,4 +70,8 @@ class ItemService{
             throw $e;
         }
     }
+
+    public function getAllItems(){
+        return $this->repository->all();
+    }
 }

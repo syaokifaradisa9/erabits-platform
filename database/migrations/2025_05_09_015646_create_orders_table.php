@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('client_id')->nullable()->references('id')->on('users');
             $table->foreignId('reserved_user_id')->nullable()->references('id')->on('users');
-            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
-            $table->string('number')->unique();
+            $table->string('number')->nullable()->unique();
             $table->date("confirmation_date")->nullable();
             $table->enum("status", [
                 OrderStatus::Pending,

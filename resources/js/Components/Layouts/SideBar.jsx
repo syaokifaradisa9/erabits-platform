@@ -46,6 +46,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     href="/items"
                                     icon={Briefcase}
                                 />
+                                <SidebarLink
+                                    name="Permintaan"
+                                    href="/orders/create"
+                                    icon={Briefcase}
+                                />
                             </div>
                             <div className="px-3 py-5">
                                 <div className="py-2">

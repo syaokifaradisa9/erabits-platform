@@ -50,11 +50,7 @@ export default function Create({ items, serviceItemTypes }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const orderData = {
-            ...data,
-            items: data.items.filter((item) => item.quantity > 0),
-        };
-        post(route("order.store"), orderData);
+        post("/orders/store");
     };
 
     return (
@@ -116,6 +112,7 @@ export default function Create({ items, serviceItemTypes }) {
                                 handleQuantityChange(originalIndex, value);
                             }}
                             total={total}
+                            showCategory={activeTab == "all"}
                         />
                         <Button
                             className="w-full mt-4"
