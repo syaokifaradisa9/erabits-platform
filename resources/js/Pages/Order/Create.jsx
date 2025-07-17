@@ -6,7 +6,12 @@ import OrderTable from "./OrderTable";
 import Button from "@/Components/Buttons/Button";
 import { Search, SendHorizonal } from "lucide-react";
 
-export default function Create({ items, serviceItemTypes }) {
+export default function Create({
+    order = null,
+    items,
+    serviceItemTypes,
+    quantifiedItems = [],
+}) {
     const allServiceItemTypes = [
         { id: "all", name: "Semua" },
         ...serviceItemTypes,
@@ -16,11 +21,24 @@ export default function Create({ items, serviceItemTypes }) {
     const [hideZero, setHideZero] = useState(false);
 
     const [displayItems, setDisplayItems] = useState(
-        items.map((item) => ({ ...item, quantity: 0, notes: "" }))
+        items.map((item) => {
+            const quantifiedItem = quantifiedItems.find(
+                (qi) => qi.item_id === item.id
+            );
+            return {
+                ...item,
+                quantity: quantifiedItem ? quantifiedItem.quantity : 0,
+                notes: "",
+            };
+        })
     );
 
-    const { data, setData, post, processing, errors } = useForm({
-        items: [],
+    const { data, setData, post, processing, put, errors } = useForm({
+        items: quantifiedItems.map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            notes: "",
+        })),
     });
 
     const handleQuantityChange = (index, value) => {
@@ -55,17 +73,33 @@ export default function Create({ items, serviceItemTypes }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post("/orders/store", {
+        const submissionData = {
+            ...data,
             items: data.items.map((item) => ({
                 id: item.id,
                 quantity: item.quantity,
+                notes: item.notes,
             })),
-        });
+        };
+
+        if (order) {
+            put(`/orders/${order.id}/update`, submissionData);
+        } else {
+            post(`/orders/store`, submissionData);
+        }
     };
 
     return (
-        <RootLayout title="Buat Permintaan Alkes">
-            <ContentCard title="Permintaan Pemeliharaan">
+        <RootLayout
+            title={order ? "Edit Permintaan Alkes" : "Buat Permintaan Alkes"}
+        >
+            <ContentCard
+                title={
+                    order
+                        ? "Edit Permintaan Pemeliharaan"
+                        : "Permintaan Pemeliharaan"
+                }
+            >
                 <div className="flex border-b dark:border-gray-700">
                     {allServiceItemTypes.map((type) => (
                         <button
@@ -126,7 +160,9 @@ export default function Create({ items, serviceItemTypes }) {
                         />
                         <Button
                             className="w-full mt-4"
-                            label="Buat Permintaan"
+                            label={
+                                order ? "Update Permintaan" : "Buat Permintaan"
+                            }
                             isLoading={processing}
                             type="submit"
                             icon={<SendHorizonal className="w-4 h-4" />}

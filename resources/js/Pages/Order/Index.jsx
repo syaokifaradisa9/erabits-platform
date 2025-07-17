@@ -63,6 +63,16 @@ export default function OrderIndex() {
         }
     }
 
+    function formatIndonesianDate(dateString) {
+        const date = new Date(dateString);
+        const options = {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        };
+        return new Intl.DateTimeFormat("id-ID", options).format(date);
+    }
+
     const columns = [
         {
             header: "Nomor Order",
@@ -98,6 +108,18 @@ export default function OrderIndex() {
                     name="status"
                     onChange={onParamsChange}
                     placeholder="Filter Status"
+                />
+            ),
+        },
+        {
+            header: "Tanggal Permintaan",
+            render: (order) => formatIndonesianDate(order.created_at),
+            footer: (
+                <FormSearch
+                    type="month"
+                    name="created_at"
+                    onChange={onParamsChange}
+                    placeholder="Filter Tanggal Permintaan"
                 />
             ),
         },

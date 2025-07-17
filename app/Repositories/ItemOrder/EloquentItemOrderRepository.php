@@ -20,6 +20,10 @@ class EloquentItemOrderRepository implements ItemOrderRepository{
     public function store($data){
         return $this->model->create($data);
     }
+
+    public function deleteByOrderId($orderId){
+        return $this->model->where("order_id", $orderId)->delete();
+    }
 }
 
 ?>

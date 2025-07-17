@@ -45,11 +45,24 @@ class OrderController extends Controller
             $this->loggedUser
         );
 
-        return to_route("dashboard.index")->with("success", "Berhasil mengajukan order");
+        return to_route("orders.index")->with("success", "Berhasil mengajukan order");
+    }
+
+    public function update(OrderRequest $request, Order $order){
+        $this->orderService->update(
+            $order,
+            OrderDTO::fromAppRequest($request)
+        );
+
+        return to_route("orders.index")->with("success", "Berhasil mengupdate order");
     }
 
     public function edit(Order $order){
-        return Inertia::render("Order/Edit", compact("order"));
+        $quantifiedItems = $this->orderService->calculateItemQuantities($order);
+        $items = $this->itemService->getAllItems();
+        $serviceItemTypes = $this->serviceItemTypeService->getActiveService();
+
+        return Inertia::render("Order/Create", compact("order", "items", "serviceItemTypes", "quantifiedItems"));
     }
 
     public function delete(Order $order){
@@ -58,12 +71,6 @@ class OrderController extends Controller
     }
 
     public function confirm($request){
-        // TODO: Implement Request Validation
-        // $this->orderService->confirm(
-        //     $request->id,
-        //     $this->loggedUser
-        // );
-
         return to_route("orders.index")->with("success", "Berhasil mengonfirmasi order");
     }
 }

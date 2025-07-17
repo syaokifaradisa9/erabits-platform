@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DataTransferObjects\OrderDTO;
+use App\Models\Order;
 use App\Repositories\Item\ItemRepository;
 use App\Repositories\ItemOrder\ItemOrderRepository;
 use App\Repositories\ItemOrderChecklist\ItemOrderChecklistRepository;
@@ -99,6 +100,61 @@ class OrderService{
             DB::rollBack();
             throw $e;
         }
+    }
+
+    public function update(Order $order, OrderDTO $dto){
+        DB::beginTransaction();
+        try{
+            // Delete old item orders
+            $this->itemOrderRepository->deleteByOrderId($order->id);
+
+            foreach($dto->items as $itemData){
+                $item = $this->itemRepository->find($itemData['id']);
+                for($i = 0; $i < $itemData['quantity']; $i++){
+                    $itemOrder = $this->itemOrderRepository->store([
+                        'order_id' => $order->id,
+                        'item_id' => $item->id,
+                        'name' => $item->name,
+                        'price' => $item->price,
+                        'notes' => $itemData['notes'] ?? null
+                    ]);
+
+                    $maintenanceCount = $item->maintenance_count;
+                    if($maintenanceCount > 0){
+                        $intervalMonths = 12 / $maintenanceCount;
+                        $currentDate = Carbon::now();
+
+                        for ($j = 0; $j < $maintenanceCount; $j++) {
+                            $maintenanceDate = $currentDate->copy()->addMonths($intervalMonths * ($j + 1));
+                            $this->itemOrderMaintenanceRepository->store([
+                                'item_order_id' => $itemOrder->id,
+                                'estimation_date' => $maintenanceDate->toDateString(),
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+            return $order;
+        }catch(Exception $e){
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    public function calculateItemQuantities(Order $order){
+        $itemQuantities = [];
+        $groupedItems = $order->itemOrders->groupBy('item_id');
+
+        foreach($groupedItems as $itemId => $items){
+            $itemQuantities[] = [
+                'item_id' => $itemId,
+                'quantity' => $items->count()
+            ];
+        }
+
+        return $itemQuantities;
     }
 
     public function delete($orderId){
