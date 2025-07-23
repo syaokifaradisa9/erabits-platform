@@ -15,6 +15,48 @@ export default function WorksheetIndex({ order, maintenances }) {
         direction: "ascending",
     });
 
+    const enabledMaintenanceIds = useMemo(() => {
+        const groupedByItemOrder = maintenances.reduce((acc, item) => {
+            const key = item.item_order_id;
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+            acc[key].push(item);
+            return acc;
+        }, {});
+
+        const enabledIds = new Set();
+        const now = new Date().getTime();
+
+        for (const itemOrderId in groupedByItemOrder) {
+            const group = groupedByItemOrder[itemOrderId];
+            const finished = group.filter((item) => item.finish_date);
+            const unfinished = group.filter((item) => !item.finish_date);
+
+            finished.forEach((item) => enabledIds.add(item.id));
+
+            if (unfinished.length > 0) {
+                let nearestTask = null;
+                let smallestDiff = Infinity;
+
+                unfinished.forEach((task) => {
+                    const taskTime = new Date(task.estimation_date).getTime();
+                    const diff = Math.abs(now - taskTime);
+                    if (diff < smallestDiff) {
+                        smallestDiff = diff;
+                        nearestTask = task;
+                    }
+                });
+
+                if (nearestTask) {
+                    enabledIds.add(nearestTask.id);
+                }
+            }
+        }
+
+        return enabledIds;
+    }, [maintenances]);
+
     const filteredAndSortedMaintenances = useMemo(() => {
         let filteredData = [...maintenances];
 
@@ -145,35 +187,59 @@ export default function WorksheetIndex({ order, maintenances }) {
             render: (item) => "-",
         },
         {
-            render: (item) => (
-                <div className="flex flex-wrap items-center">
-                    <Tooltip text="Lembar Kerja">
-                        <Link
-                            href={`/orders/${order.id}/worksheet`}
-                            className="ml-2 text-gray-600 dark:text-gray-400 hover:underline"
-                        >
-                            <SquarePen className="size-4" />
-                        </Link>
-                    </Tooltip>
-                    <Tooltip text="Perbaikan">
-                        <Link
-                            href={`/orders/${order.id}/worksheet`}
-                            className="ml-2 text-gray-600 dark:text-gray-400 hover:underline"
-                        >
-                            <Wrench className="size-4" />
-                        </Link>
-                    </Tooltip>
-                </div>
-            ),
+            render: (item) => {
+                const isEnabled = enabledMaintenanceIds.has(item.id);
+                if (!isEnabled) {
+                    return "-";
+                }
+
+                return (
+                    <div className="flex flex-wrap items-center">
+                        <Tooltip text="Lembar Kerja">
+                            <Link
+                                href={
+                                    isEnabled
+                                        ? `/orders/${order.id}/worksheet`
+                                        : "#"
+                                }
+                                className={`ml-2 ${
+                                    isEnabled
+                                        ? "text-gray-600 dark:text-gray-400 hover:underline"
+                                        : "text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                                }`}
+                                as="button"
+                                disabled={!isEnabled}
+                            >
+                                <SquarePen className="size-4" />
+                            </Link>
+                        </Tooltip>
+                        <Tooltip text="Perbaikan">
+                            <Link
+                                href={
+                                    isEnabled
+                                        ? `/orders/${order.id}/worksheet`
+                                        : "#"
+                                }
+                                className={`ml-2 ${
+                                    isEnabled
+                                        ? "text-gray-600 dark:text-gray-400 hover:underline"
+                                        : "text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                                }`}
+                                as="button"
+                                disabled={!isEnabled}
+                            >
+                                <Wrench className="size-4" />
+                            </Link>
+                        </Tooltip>
+                    </div>
+                );
+            },
         },
     ];
 
     return (
-        <RootLayout title={`Lembar Kerja Pemeliharaan Order ${order.number}`}>
-            <ContentCard
-                title={`Lembar Kerja Pemeliharaan Order ${order.number}`}
-                backPath="/orders"
-            >
+        <RootLayout title={`Lembar Kerja - ${order.number}`}>
+            <ContentCard title="Lembar Kerja Order" backPath="/orders">
                 <div className="grid grid-cols-1 gap-4 mb-4 md:grid-cols-2">
                     <div>
                         <FormSelect
