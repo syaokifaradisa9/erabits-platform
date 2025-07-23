@@ -82,6 +82,7 @@ class OrderController extends Controller
     public function detail(Order $order){
         $order->load("client", "itemOrders.item.serviceItemType");
         $serviceItemTypes = $this->serviceItemTypeService->getActiveService();
+
         return Inertia::render("Order/Detail", compact("order", "serviceItemTypes"));
     }
 
