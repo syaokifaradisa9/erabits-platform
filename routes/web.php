@@ -90,6 +90,7 @@ Route::middleware('auth')->group(function () {
             Route::get("edit", "edit")->name("edit");
             Route::put("update", "update")->name("update");
             Route::delete("delete", "delete")->name("delete");
+            Route::put("confirm", "confirm")->name("confirm");
         });
     });
 });

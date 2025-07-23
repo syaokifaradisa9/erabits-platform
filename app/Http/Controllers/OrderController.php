@@ -83,7 +83,8 @@ class OrderController extends Controller
         return to_route("orders.index")->with("success", "Berhasil menghapus data");
     }
 
-    public function confirm($request){
+    public function confirm(Order $order){
+        $this->orderService->confirm($order->id, now());
         return to_route("orders.index")->with("success", "Berhasil mengonfirmasi order");
     }
 }

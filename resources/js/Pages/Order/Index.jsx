@@ -2,7 +2,7 @@ import RootLayout from "@/Layouts/RootLayout";
 import ContentCard from "@/Components/Layouts/ContentCard";
 import Button from "@/Components/Buttons/Button";
 import { useEffect, useState } from "react";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Check, Edit, Plus, Trash2 } from "lucide-react";
 import DataTable from "@/Components/Tables/Datatable";
 import { Link, router } from "@inertiajs/react";
 import FormSearch from "@/Components/Forms/FormSearch";
@@ -17,6 +17,8 @@ export default function OrderIndex() {
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [orderToDelete, setOrderToDelete] = useState(null);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [orderToConfirm, setOrderToConfirm] = useState(null);
 
     async function loadDatatable() {
         let url = `/orders/datatable`;
@@ -63,6 +65,28 @@ export default function OrderIndex() {
         }
     }
 
+    function onConfirm(order) {
+        setOrderToConfirm(order);
+        setIsConfirmModalOpen(true);
+    }
+
+    function handleConfirmOrder() {
+        if (orderToConfirm) {
+            router.put(
+                `/orders/${orderToConfirm.id}/confirm`,
+                {},
+                {
+                    onSuccess: () => {
+                        loadDatatable();
+                        setIsConfirmModalOpen(false);
+                        setOrderToConfirm(null);
+                    },
+                    preserveScroll: true,
+                }
+            );
+        }
+    }
+
     function formatIndonesianDate(dateString) {
         const date = new Date(dateString);
         const options = {
@@ -76,10 +100,10 @@ export default function OrderIndex() {
     const columns = [
         {
             header: "Nomor Order",
-            render: (order) => order.order_number ?? "-",
+            render: (order) => order.number ?? "-",
             footer: (
                 <FormSearch
-                    name="order_number"
+                    name="number"
                     onChange={onParamsChange}
                     placeholder="Filter Nomor Order"
                 />
@@ -125,23 +149,33 @@ export default function OrderIndex() {
         },
         {
             header: "Aksi",
-            render: (order) => (
-                <div className="flex items-center">
-                    <Link
-                        href={`/orders/${order.id}/edit`}
-                        className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                        <Edit className="size-4" />
-                    </Link>
-                    <button
-                        type="button"
-                        onClick={() => onDelete(order)}
-                        className="ml-2 text-red-600 dark:text-red-400 hover:underline"
-                    >
-                        <Trash2 className="size-4" />
-                    </button>
-                </div>
-            ),
+            render: (order) =>
+                order.status == "Pending" ? (
+                    <div className="flex items-center">
+                        <button
+                            type="button"
+                            onClick={() => onConfirm(order)}
+                            className="text-green-600 dark:text-green-400 hover:underline"
+                        >
+                            <Check className="size-4" />
+                        </button>
+                        <Link
+                            href={`/orders/${order.id}/edit`}
+                            className="ml-2 text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                            <Edit className="size-4" />
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={() => onDelete(order)}
+                            className="ml-2 text-red-600 dark:text-red-400 hover:underline"
+                        >
+                            <Trash2 className="size-4" />
+                        </button>
+                    </div>
+                ) : (
+                    <></>
+                ),
         },
     ];
 
@@ -175,6 +209,17 @@ export default function OrderIndex() {
             >
                 Apakah Anda yakin ingin menghapus order{" "}
                 <strong>{orderToDelete?.order_number}</strong>?
+            </ConfirmationModal>
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={handleConfirmOrder}
+                title="Konfirmasi Order"
+                confirmVariant="primary"
+                confirmText="Konfirmasi"
+            >
+                Apakah Anda yakin ingin mengonfirmasi order{" "}
+                <strong>{orderToConfirm?.order_number}</strong>?
             </ConfirmationModal>
         </RootLayout>
     );

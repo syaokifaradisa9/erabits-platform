@@ -13,6 +13,10 @@ class EloquentOrderRepository implements OrderRepository{
         return $this->model->whereYear("created_at", $year)->whereNotNull("confirmation_date")->count();
     }
 
+    public function countConfirmedByMonth($year, $month){
+        return $this->model->whereYear("confirmation_date", $year)->whereMonth("confirmation_date", $month)->count();
+    }
+
     public function findById($id){
         return $this->model->find($id);
     }

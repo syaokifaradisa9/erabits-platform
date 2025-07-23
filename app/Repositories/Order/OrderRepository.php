@@ -8,7 +8,7 @@ interface OrderRepository{
     public function update($id, $data);
     public function delete($id);
     public function countConfirmedByYear($year);
-
+    public function countConfirmedByMonth($year, $month);
 }
 
 ?>
