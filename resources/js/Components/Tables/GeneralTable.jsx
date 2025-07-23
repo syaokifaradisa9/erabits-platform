@@ -1,5 +1,5 @@
 import CheckRoles from "../../utils/CheckRoles";
-import ForEachUtils from "../../Utils/ForEachUtils";
+import ForEachUtils from "../../utils/ForEachUtils";
 
 export default function GeneralTable({
     title = "",

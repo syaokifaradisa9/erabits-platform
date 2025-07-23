@@ -32,4 +32,9 @@ class Order extends Model
     public function itemOrders(){
         return $this->hasMany(ItemOrder::class);
     }
+
+    public function maintenances()
+    {
+        return $this->hasManyThrough(ItemOrderMaintenance::class, ItemOrder::class);
+    }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WorksheetController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect("/", "/auth/login");
@@ -81,18 +82,23 @@ Route::middleware('auth')->group(function () {
         });
     });
 
-    Route::prefix("orders")->name("orders.")->controller(OrderController::class)->group(function () {
-        Route::get("/", "index")->name("index");
-        Route::get("datatable", "datatable")->name("datatable");
-        Route::get("create", "create")->name("create");
-        Route::post("store", "store")->name("store");
-        Route::prefix("{order}")->group(function(){
-            Route::get("edit", "edit")->name("edit");
-            Route::get("show", "show")->name("show");
-            Route::get("detail", "detail")->name("detail");
-            Route::put("update", "update")->name("update");
-            Route::delete("delete", "delete")->name("delete");
-            Route::put("confirm", "confirm")->name("confirm");
+    Route::prefix("orders")->name("orders.")->group(function () {
+        Route::controller(OrderController::class)->group(function(){
+            Route::get("/", "index")->name("index");
+            Route::get("datatable", "datatable")->name("datatable");
+            Route::get("create", "create")->name("create");
+            Route::post("store", "store")->name("store");
+            Route::prefix("{order}")->group(function(){
+                Route::get("edit", "edit")->name("edit");
+                Route::get("detail", "detail")->name("detail");
+                Route::put("update", "update")->name("update");
+                Route::delete("delete", "delete")->name("delete");
+                Route::put("confirm", "confirm")->name("confirm");
+            });
+        });
+
+        Route::prefix("{order}/worksheet")->name("worksheet.")->controller(WorksheetController::class)->group(function () {
+            Route::get("/", "index")->name("index");
         });
     });
 });
