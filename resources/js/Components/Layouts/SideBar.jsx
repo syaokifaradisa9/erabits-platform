@@ -69,6 +69,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     name="Pengguna"
                                     href="/users"
                                     icon={Users}
+                                    roles={["Superadmin", "Admin", "Manager"]}
                                 />
                                 <SidebarLink
                                     name="Klien"

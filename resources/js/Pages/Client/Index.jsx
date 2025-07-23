@@ -89,6 +89,7 @@ export default function ClientIndex() {
         },
         {
             header: "Aksi",
+            roles: ["Superadmin", "Admin"],
             render: (client) => (
                 <div className="flex items-center">
                     <Link

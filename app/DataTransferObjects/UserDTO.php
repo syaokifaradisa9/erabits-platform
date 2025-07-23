@@ -2,7 +2,9 @@
 
 namespace App\DataTransferObjects;
 
+use App\Enum\UserRole;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserDTO
 {
@@ -30,7 +32,7 @@ class UserDTO
             province: $request->input('province'),
             city: $request->input('city'),
             address: $request->input('address'),
-            service_item_type_id: $request->input('service_item_type_id')
+            service_item_type_id: Auth::user()->hasRole(UserRole::Manager) ? Auth::user()->service_item_type_id : $request->input('service_item_type_id')
         );
     }
 

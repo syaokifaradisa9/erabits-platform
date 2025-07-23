@@ -8,11 +8,15 @@ use App\Http\Requests\Common\DatatableRequest;
 
 class UserDatatableService implements DatatableService
 {
-    private function getStartedQuery(DatatableRequest $request)
+    private function getStartedQuery(DatatableRequest $request, $loggedUser)
     {
         return User::with(['roles', "serviceItemType"])
-            ->whereHas('roles', function ($query) {
-                $query->where('name', '!=', UserRole::Superadmin)->where("name", "!=", UserRole::Client);
+            ->whereHas('roles', function ($query) use ($loggedUser){
+                $query->where('name', '!=', UserRole::Superadmin)
+                    ->where("name", "!=", UserRole::Client);
+            })
+            ->when($loggedUser->hasRole(UserRole::Manager), function($query) use ($loggedUser){
+                $query->where("service_item_type_id", $loggedUser->service_item_type_id)->where("id", "!=", $loggedUser->id);
             })
             ->where(function($query) use ($request){
                 $query->when($request->search, function ($query, $search) {
@@ -51,7 +55,7 @@ class UserDatatableService implements DatatableService
     public function getDatatable(DatatableRequest $request, $loggedUser = null, $additionalData = [])
     {
         $limit = $request->limit ?? 10;
-        $query = $this->getStartedQuery($request);
+        $query = $this->getStartedQuery($request, $loggedUser);
         return $query->paginate($limit);
     }
 

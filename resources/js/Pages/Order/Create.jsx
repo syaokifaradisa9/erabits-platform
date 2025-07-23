@@ -100,6 +100,7 @@ export default function Create({
             title={order ? "Edit Permintaan Alkes" : "Buat Permintaan Alkes"}
         >
             <ContentCard
+                backPath="/orders"
                 title={
                     order
                         ? "Edit Permintaan Pemeliharaan"

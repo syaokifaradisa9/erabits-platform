@@ -5,7 +5,6 @@ namespace App\Services;
 use App\DataTransferObjects\UserDTO;
 use App\Repositories\User\UserRepository;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class UserService
 {

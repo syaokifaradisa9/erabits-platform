@@ -67,6 +67,7 @@ export default function UserIndex() {
         {
             header: "Layanan",
             render: (user) => user?.service_item_type?.name ?? "-",
+            roles: ["Superadmin", "Admin"],
             footer: (
                 <FormSearch
                     name="service_item_type"

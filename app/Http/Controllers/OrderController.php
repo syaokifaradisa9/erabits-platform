@@ -33,7 +33,7 @@ class OrderController extends Controller
     }
 
     public function datatable(DatatableRequest $request){
-        return $this->orderDatatableService->getDatatable($request);
+        return $this->orderDatatableService->getDatatable($request, $this->loggedUser);
     }
 
     public function create(){

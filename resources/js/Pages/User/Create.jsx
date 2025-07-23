@@ -6,6 +6,7 @@ import FormInput from "@/Components/Forms/FormInput";
 import FormSelect from "@/Components/Forms/FormSelect";
 import FormTextArea from "@/Components/Forms/FormTextArea";
 import { Save } from "lucide-react";
+import CheckRoles from "@/utils/CheckRoles";
 
 export default function UserCreate({ user, serviceItemTypes, roles }) {
     const { data, setData, post, put, errors, processing } = useForm({
@@ -46,7 +47,6 @@ export default function UserCreate({ user, serviceItemTypes, roles }) {
                             onChange={(e) => setData("name", e.target.value)}
                             error={errors.name}
                         />
-
                         <FormInput
                             prefix="+62"
                             label="Telepon"
@@ -56,19 +56,27 @@ export default function UserCreate({ user, serviceItemTypes, roles }) {
                             error={errors.phone}
                             placeholder="Masukkan nomor telepon"
                         />
-                        <FormSelect
-                            label="Layanan"
-                            name="service_item_type_id"
-                            value={data.service_item_type_id}
-                            onChange={(e) =>
-                                setData("service_item_type_id", e.target.value)
+                        <CheckRoles
+                            roles={["Superadmin", "Admin"]}
+                            children={
+                                <FormSelect
+                                    label="Layanan"
+                                    name="service_item_type_id"
+                                    value={data.service_item_type_id}
+                                    onChange={(e) =>
+                                        setData(
+                                            "service_item_type_id",
+                                            e.target.value
+                                        )
+                                    }
+                                    error={errors.service_item_type_id}
+                                    options={serviceItemTypes.map((type) => ({
+                                        value: type.id,
+                                        label: type.name,
+                                    }))}
+                                    placeholder="Pilih jenis layanan"
+                                />
                             }
-                            error={errors.service_item_type_id}
-                            options={serviceItemTypes.map((type) => ({
-                                value: type.id,
-                                label: type.name,
-                            }))}
-                            placeholder="Pilih jenis layanan"
                         />
                         <FormSelect
                             label="Hak Akses"
@@ -77,8 +85,8 @@ export default function UserCreate({ user, serviceItemTypes, roles }) {
                             onChange={(e) => setData("role", e.target.value)}
                             error={errors.role}
                             options={roles.map((role) => ({
-                                value: role.name,
-                                label: role.name,
+                                value: role,
+                                label: role,
                             }))}
                             placeholder="Pilih hak akses"
                         />

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enum\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 
 class UserRequest extends FormRequest
@@ -21,7 +23,6 @@ class UserRequest extends FormRequest
             'province' => 'required',
             'city' => 'required',
             'address' => 'nullable|string|max:255',
-            'service_item_type_id' => 'required|exists:service_item_types,id',
             'role' => 'required|exists:roles,name',
             'password' => [
                 'required',
@@ -30,6 +31,10 @@ class UserRequest extends FormRequest
             ],
             'password_confirmation' => 'required_with:password|same:password',
         ];
+
+        if(Auth::user()->hasRole([UserRole::Superadmin, UserRole::Admin])){
+            $rules['service_item_type_id'] = 'required|exists:service_item_types,id';
+        }
 
         if($this->isMethod('put')) {
             unset($rules['password'], $rules['password_confirmation']);
@@ -61,7 +66,6 @@ class UserRequest extends FormRequest
             'role.required' => 'Mohon pilih hak akses pengguna.',
             'role.exists' => 'Hak akses yang dipilih tidak valid.',
             'password_confirmation.required_with' => 'Mohon konfirmasi password jika mengisi password baru.',
-
         ];
     }
 }

@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
             'city' => 'Banjarbaru',
             'address' => 'Jl. Raya No. 1',
         ])->assignRole(UserRole::Superadmin);
+        
 
         User::create([
             'name' => 'Client',
