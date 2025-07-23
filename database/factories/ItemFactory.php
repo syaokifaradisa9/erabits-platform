@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Item;
+use App\Enum\ServiceItemTypeEnum;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ItemFactory extends Factory
@@ -22,7 +23,7 @@ class ItemFactory extends Factory
     public function definition(): array
     {
         return [
-            'service_item_type_id' => \App\Models\ServiceItemType::factory(),
+            'service_item_type_id' => $this->faker->numberBetween(1, 4),
             'name' => $this->faker->word(),
             'image_path' => $this->faker->imageUrl(),
             'price' => $this->faker->numberBetween(10000, 1000000),

@@ -2,6 +2,7 @@
 
 namespace App\Datatables;
 
+use App\Enum\UserRole;
 use App\Models\Item;
 use App\Http\Requests\Common\DatatableRequest;
 
@@ -9,7 +10,9 @@ class ItemDatatableService implements DatatableService{
     private function getStartedQuery(DatatableRequest $request, $loggedUser){
         $query = Item::with("serviceItemType")
             ->withCount(['checklists as checklist_count'])
-            ->when($request->search, function($query, $search){
+            ->when($loggedUser->hasRole([UserRole::Manager, UserRole::Officer, UserRole::Finance]), function($query) use ($loggedUser){
+                $query->where("service_item_type_id", $loggedUser->service_item_type_id);
+            })->when($request->search, function($query, $search){
                 $query->where("name", "like", "%$search%")
                       ->orWhere("price", "like", "%$search%")
                       ->orWhere("maintenance_count", "like", "%$search%")

@@ -8,6 +8,7 @@ import { Link, router } from "@inertiajs/react";
 import DropdownButton from "@/Components/Buttons/DropdownButton";
 import FormSearch from "../../Components/Forms/FormSearch";
 import ConfirmationModal from "@/Components/Modals/ConfirmationModal";
+import CheckRoles from "@/utils/CheckRoles";
 
 export default function ItemIndex() {
     const [dataTable, setDataTable] = useState([]);
@@ -98,11 +99,16 @@ export default function ItemIndex() {
             <ContentCard
                 title="Data Master Item"
                 additionalButton={
-                    <Button
-                        className="w-full"
-                        label="Tambah Data"
-                        href="/items/create"
-                        icon={<Plus className="size-4" />}
+                    <CheckRoles
+                        roles={["Superadmin", "Admin", "Manager"]}
+                        children={
+                            <Button
+                                className="w-full"
+                                label="Tambah Data"
+                                href="/items/create"
+                                icon={<Plus className="size-4" />}
+                            />
+                        }
                     />
                 }
             >
@@ -139,6 +145,7 @@ export default function ItemIndex() {
                     }
                     columns={[
                         {
+                            roles: ["Superadmin", "Admin"],
                             header: "Layanan",
                             render: (item) => item.service_item_type.name,
                             footer: (
@@ -190,6 +197,7 @@ export default function ItemIndex() {
                             render: (item) => item.checklist_count,
                         },
                         {
+                            roles: ["Superadmin", "Admin", "Manager"],
                             header: "Aksi",
                             render: (item) => (
                                 <div className="flex items-center">

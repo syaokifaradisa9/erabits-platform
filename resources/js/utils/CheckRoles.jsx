@@ -5,7 +5,7 @@ export default function CheckRoles({
     notRoles = [],
     anotherValidation = true,
     children = null,
-    elseChildren = null,
+    elseChildren = <></>,
 }) {
     const { loggedrole } = usePage().props;
 

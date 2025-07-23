@@ -7,6 +7,7 @@ import DataTable from "@/Components/Tables/Datatable";
 import { Link, router } from "@inertiajs/react";
 import FormSearch from "@/Components/Forms/FormSearch";
 import ConfirmationModal from "@/Components/Modals/ConfirmationModal";
+import CheckRoles from "@/utils/CheckRoles";
 
 export default function OrderIndex() {
     const [dataTable, setDataTable] = useState([]);
@@ -152,13 +153,18 @@ export default function OrderIndex() {
             render: (order) => (
                 <div className="flex items-center">
                     {order.status == "Pending" && (
-                        <button
-                            type="button"
-                            onClick={() => onConfirm(order)}
-                            className="text-green-600 dark:text-green-400 hover:underline"
-                        >
-                            <Check className="size-4" />
-                        </button>
+                        <CheckRoles
+                            roles={["Superadmin", "Admin"]}
+                            children={
+                                <button
+                                    type="button"
+                                    onClick={() => onConfirm(order)}
+                                    className="text-green-600 dark:text-green-400 hover:underline"
+                                >
+                                    <Check className="size-4" />
+                                </button>
+                            }
+                        />
                     )}
                     {order.status == "Pending" && (
                         <Link
@@ -193,10 +199,16 @@ export default function OrderIndex() {
             <ContentCard
                 title="Data Order"
                 additionalButton={
-                    <Button
-                        label="Tambah Order"
-                        href="/orders/create"
-                        icon={<Plus className="size-4" />}
+                    <CheckRoles
+                        roles={["Superadmin", "Admin", "Manager", "Client"]}
+                        children={
+                            <Button
+                                className="w-full"
+                                label="Tambah Order"
+                                href="/orders/create"
+                                icon={<Plus className="size-4" />}
+                            />
+                        }
                     />
                 }
             >
