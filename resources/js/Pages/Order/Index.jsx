@@ -2,7 +2,7 @@ import RootLayout from "@/Layouts/RootLayout";
 import ContentCard from "@/Components/Layouts/ContentCard";
 import Button from "@/Components/Buttons/Button";
 import { useEffect, useState } from "react";
-import { Check, Edit, Plus, Trash2 } from "lucide-react";
+import { Check, Edit, Eye, Info, Plus, Trash2 } from "lucide-react";
 import DataTable from "@/Components/Tables/Datatable";
 import { Link, router } from "@inertiajs/react";
 import FormSearch from "@/Components/Forms/FormSearch";
@@ -149,9 +149,9 @@ export default function OrderIndex() {
         },
         {
             header: "Aksi",
-            render: (order) =>
-                order.status == "Pending" ? (
-                    <div className="flex items-center">
+            render: (order) => (
+                <div className="flex items-center">
+                    {order.status == "Pending" && (
                         <button
                             type="button"
                             onClick={() => onConfirm(order)}
@@ -159,12 +159,16 @@ export default function OrderIndex() {
                         >
                             <Check className="size-4" />
                         </button>
+                    )}
+                    {order.status == "Pending" && (
                         <Link
                             href={`/orders/${order.id}/edit`}
                             className="ml-2 text-blue-600 dark:text-blue-400 hover:underline"
                         >
                             <Edit className="size-4" />
                         </Link>
+                    )}
+                    {order.status == "Pending" && (
                         <button
                             type="button"
                             onClick={() => onDelete(order)}
@@ -172,10 +176,15 @@ export default function OrderIndex() {
                         >
                             <Trash2 className="size-4" />
                         </button>
-                    </div>
-                ) : (
-                    <></>
-                ),
+                    )}
+                    <Link
+                        href={`/orders/${order.id}/detail`}
+                        className="ml-2 text-gray-600 dark:text-gray-400 hover:underline"
+                    >
+                        <Info className="size-4" />
+                    </Link>
+                </div>
+            ),
         },
     ];
 

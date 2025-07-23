@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
         Route::post("store", "store")->name("store");
         Route::prefix("{order}")->group(function(){
             Route::get("edit", "edit")->name("edit");
+            Route::get("show", "show")->name("show");
+            Route::get("detail", "detail")->name("detail");
             Route::put("update", "update")->name("update");
             Route::delete("delete", "delete")->name("delete");
             Route::put("confirm", "confirm")->name("confirm");

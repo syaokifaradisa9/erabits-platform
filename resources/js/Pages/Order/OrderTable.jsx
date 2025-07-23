@@ -6,6 +6,7 @@ export default function OrderTable({
     onChange,
     total,
     showCategory = false,
+    isReadOnly = false,
 }) {
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("id-ID", {
@@ -62,17 +63,23 @@ export default function OrderTable({
                             <td className="px-4 py-3 text-xs text-right text-gray-700 md:text-sm dark:text-slate-300">
                                 {formatCurrency(item.price)}
                             </td>
-                            <td className="px-4 py-3">
-                                <input
-                                    type="number"
-                                    min="0"
-                                    name={item.id}
-                                    value={quantities[index]}
-                                    onChange={(e) =>
-                                        onChange(index, e.target.value)
-                                    }
-                                    className="w-full px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm text-center bg-white border border-gray-300 rounded-lg dark:border-slate-600 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
+                            <td className="px-4 py-3 text-center">
+                                {isReadOnly ? (
+                                    <span className="text-xs md:text-sm dark:text-white">
+                                        {quantities[index]}
+                                    </span>
+                                ) : (
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        name={item.id}
+                                        value={quantities[index]}
+                                        onChange={(e) =>
+                                            onChange(index, e.target.value)
+                                        }
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm text-center bg-white border border-gray-300 rounded-lg dark:border-slate-600 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                )}
                             </td>
                             <td className="px-4 py-3 text-xs font-medium text-right text-gray-900 md:text-sm dark:text-white">
                                 {formatCurrency(

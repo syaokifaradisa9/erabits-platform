@@ -17,6 +17,7 @@ use App\Services\ClientService;
 
 class OrderController extends Controller
 {
+    /** @var \App\Models\User */
     private $loggedUser;
     public function __construct(
         protected OrderService $orderService,
@@ -76,6 +77,12 @@ class OrderController extends Controller
         $serviceItemTypes = $this->serviceItemTypeService->getActiveService();
 
         return Inertia::render("Order/Create", compact("order", "items", "serviceItemTypes", "quantifiedItems", "clients"));
+    }
+
+    public function detail(Order $order){
+        $order->load("client", "itemOrders.item.serviceItemType");
+        $serviceItemTypes = $this->serviceItemTypeService->getActiveService();
+        return Inertia::render("Order/Detail", compact("order", "serviceItemTypes"));
     }
 
     public function delete(Order $order){
