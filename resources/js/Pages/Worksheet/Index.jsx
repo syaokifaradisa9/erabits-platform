@@ -199,7 +199,7 @@ export default function WorksheetIndex({ order, maintenances }) {
                             <Link
                                 href={
                                     isEnabled
-                                        ? `/orders/${order.id}/worksheet`
+                                        ? `/orders/${order.id}/worksheet/${item.id}`
                                         : "#"
                                 }
                                 className={`ml-2 ${
@@ -217,7 +217,7 @@ export default function WorksheetIndex({ order, maintenances }) {
                             <Link
                                 href={
                                     isEnabled
-                                        ? `/orders/${order.id}/worksheet`
+                                        ? `/orders/${order.id}/worksheet/${item.id}`
                                         : "#"
                                 }
                                 className={`ml-2 ${

@@ -7,6 +7,7 @@ interface ItemOrderRepository{
     public function findById($id);
     public function store($data);
     public function deleteByOrderId($orderId);
+    public function update($id, $data);
 }
 
 ?>

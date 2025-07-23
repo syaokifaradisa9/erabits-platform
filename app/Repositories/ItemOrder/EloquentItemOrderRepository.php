@@ -24,6 +24,10 @@ class EloquentItemOrderRepository implements ItemOrderRepository{
     public function deleteByOrderId($orderId){
         return $this->model->where("order_id", $orderId)->delete();
     }
+
+    public function update($id, $data){
+        return $this->model->where("id", $id)->update($data);
+    }
 }
 
 ?>

@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class ClientInventory extends Model
 {
     protected $fillable = [
+        'user_id',
+        'service_item_type_id',
+
         'name',
         'merk',
         'model',

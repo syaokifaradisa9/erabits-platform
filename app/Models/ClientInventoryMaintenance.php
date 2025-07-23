@@ -9,6 +9,7 @@ class ClientInventoryMaintenance extends Model
     protected $fillable = [
         'client_inventory_id',
         'item_order_maintenance_id',
+        'location'
     ];
 
     public function clientInventory()

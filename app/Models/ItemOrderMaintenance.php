@@ -21,4 +21,14 @@ class ItemOrderMaintenance extends Model
     {
         return $this->belongsTo(ItemOrder::class);
     }
+
+    public function checklists()
+    {
+        return $this->hasMany(ItemOrderChecklist::class);
+    }
+
+    public function clientInventoryMaintenance()
+    {
+        return $this->hasOne(ClientInventoryMaintenance::class);
+    }
 }

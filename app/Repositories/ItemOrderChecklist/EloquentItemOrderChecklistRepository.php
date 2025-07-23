@@ -12,6 +12,11 @@ class EloquentItemOrderChecklistRepository implements ItemOrderChecklistReposito
     public function store($data){
         return $this->model->create($data);
     }
+
+    public function updateOrCreate(array $attributes, array $values)
+    {
+        return $this->model->updateOrCreate($attributes, $values);
+    }
 }
 
 ?>

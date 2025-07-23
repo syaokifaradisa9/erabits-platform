@@ -12,6 +12,10 @@ class EloquentItemOrderMaintenanceRepository implements ItemOrderMaintenanceRepo
     public function store($data){
         return $this->model->create($data);
     }
+
+    public function update($id, $data){
+        return $this->model->where("id", $id)->update($data);
+    }
 }
 
 ?>

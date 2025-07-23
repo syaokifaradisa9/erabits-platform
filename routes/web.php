@@ -99,6 +99,8 @@ Route::middleware('auth')->group(function () {
 
         Route::prefix("{order}/worksheet")->name("worksheet.")->controller(WorksheetController::class)->group(function () {
             Route::get("/", "index")->name("index");
+            Route::get("{maintenance}", "sheet")->name("sheet");
+            Route::post("{maintenance}/store", "storeSheet")->name("storeSheet");
         });
     });
 });

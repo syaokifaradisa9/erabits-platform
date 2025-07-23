@@ -1,6 +1,7 @@
 <?php
 
 use App\Enum\ChecklistCondition;
+use App\Models\ItemChecklist;
 use App\Models\ItemOrderMaintenance;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -10,10 +11,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Checklist for 1 maintenance 
+        // Checklist for 1 maintenance
         Schema::create('item_order_checklists', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(ItemOrderMaintenance::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignIdFor(ItemChecklist::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
             $table->string("name");
             $table->text("description");
             $table->enum("condition", [

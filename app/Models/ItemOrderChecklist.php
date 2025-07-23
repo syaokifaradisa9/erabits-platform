@@ -8,6 +8,7 @@ class ItemOrderChecklist extends Model
 {
     protected $fillable = [
         'item_order_maintenance_id',
+        'item_checklist_id',
         'name',
         'description',
         'condition',

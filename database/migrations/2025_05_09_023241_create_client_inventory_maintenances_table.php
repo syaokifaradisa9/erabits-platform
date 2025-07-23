@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(ClientInventory::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignIdFor(ItemOrderMaintenance::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
+            $table->string("location");
             $table->timestamps();
         });
     }
