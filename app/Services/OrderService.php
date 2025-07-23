@@ -26,7 +26,7 @@ class OrderService{
         DB::beginTransaction();
         try{
             $order = $this->orderRepository->store([
-                'client_id' => $loggedUser->id,
+                "client_id" => $dto->clientId,
                 'reserved_user_id' => $loggedUser->id
             ]);
 
@@ -105,8 +105,10 @@ class OrderService{
     public function update(Order $order, OrderDTO $dto){
         DB::beginTransaction();
         try{
-            // Delete old item orders
             $this->itemOrderRepository->deleteByOrderId($order->id);
+            $this->orderRepository->update($order->id, [
+                "client_id" => $dto->clientId,
+            ]);
 
             foreach($dto->items as $itemData){
                 $item = $this->itemRepository->find($itemData['id']);

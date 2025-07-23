@@ -2,12 +2,17 @@
 
 namespace App\Repositories\User;
 
+use App\Enum\UserRole;
 use App\Models\User;
 
 class EloquentUserRepository implements UserRepository{
     public function __construct(
         protected User $model,
     ){}
+
+    public function getAll(){
+        return $this->model->role(UserRole::Client)->orderBy("name")->get();
+    }
 
     public function store(array $data): User
     {

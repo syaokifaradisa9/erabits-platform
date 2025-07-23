@@ -11,7 +11,9 @@ use App\Services\ServiceItemTypeService;
 use Illuminate\Support\Facades\Auth;
 use App\DataTransferObjects\OrderDTO;
 use App\Datatables\OrderDatatableService;
+use App\Enum\UserRole;
 use App\Http\Requests\Common\DatatableRequest;
+use App\Services\ClientService;
 
 class OrderController extends Controller
 {
@@ -20,7 +22,8 @@ class OrderController extends Controller
         protected OrderService $orderService,
         protected ItemService $itemService,
         protected ServiceItemTypeService $serviceItemTypeService,
-        protected OrderDatatableService $orderDatatableService
+        protected OrderDatatableService $orderDatatableService,
+        protected ClientService $clientService,
     ){
         $this->loggedUser = Auth::user();
     }
@@ -34,9 +37,14 @@ class OrderController extends Controller
     }
 
     public function create(){
+        $clients = [];
+        if($this->loggedUser->hasRole([UserRole::Superadmin, UserRole::Admin, UserRole::Manager])){
+            $clients = $this->clientService->getAll();
+        }
+
         $items = $this->itemService->getAllItems();
         $serviceItemTypes = $this->serviceItemTypeService->getActiveService();
-        return Inertia::render("Order/Create", compact("items", "serviceItemTypes"));
+        return Inertia::render("Order/Create", compact("items", "serviceItemTypes", "clients"));
     }
 
     public function store(OrderRequest $request){
@@ -58,11 +66,16 @@ class OrderController extends Controller
     }
 
     public function edit(Order $order){
+        $clients = [];
+        if($this->loggedUser->hasRole([UserRole::Superadmin, UserRole::Admin, UserRole::Manager])){
+            $clients = $this->clientService->getAll();
+        }
+
         $quantifiedItems = $this->orderService->calculateItemQuantities($order);
         $items = $this->itemService->getAllItems();
         $serviceItemTypes = $this->serviceItemTypeService->getActiveService();
 
-        return Inertia::render("Order/Create", compact("order", "items", "serviceItemTypes", "quantifiedItems"));
+        return Inertia::render("Order/Create", compact("order", "items", "serviceItemTypes", "quantifiedItems", "clients"));
     }
 
     public function delete(Order $order){

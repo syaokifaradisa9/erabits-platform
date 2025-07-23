@@ -45,6 +45,13 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     name="Item"
                                     href="/items"
                                     icon={Briefcase}
+                                    roles={[
+                                        "Superadmin",
+                                        "Admin",
+                                        "Manager",
+                                        "Officer",
+                                        "Finance",
+                                    ]}
                                 />
                                 <SidebarLink
                                     name="Permintaan"
