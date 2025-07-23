@@ -2,12 +2,21 @@ import RootLayout from "@/Layouts/RootLayout";
 import ContentCard from "@/Components/Layouts/ContentCard";
 import Button from "@/Components/Buttons/Button";
 import { useEffect, useState } from "react";
-import { Check, Edit, Eye, Info, Plus, Trash2 } from "lucide-react";
+import {
+    Check,
+    ClipboardPenLine,
+    Edit,
+    Eye,
+    Info,
+    Plus,
+    Trash2,
+} from "lucide-react";
 import DataTable from "@/Components/Tables/Datatable";
 import { Link, router } from "@inertiajs/react";
 import FormSearch from "@/Components/Forms/FormSearch";
 import ConfirmationModal from "@/Components/Modals/ConfirmationModal";
 import CheckRoles from "@/utils/CheckRoles";
+import Tooltip from "../../Components/Common/Tooltip";
 
 export default function OrderIndex() {
     const [dataTable, setDataTable] = useState([]);
@@ -151,7 +160,7 @@ export default function OrderIndex() {
         {
             header: "Aksi",
             render: (order) => (
-                <div className="flex items-center">
+                <div className="flex flex-wrap items-center">
                     {order.status == "Pending" && (
                         <CheckRoles
                             roles={["Superadmin", "Admin"]}
@@ -183,12 +192,25 @@ export default function OrderIndex() {
                             <Trash2 className="size-4" />
                         </button>
                     )}
-                    <Link
-                        href={`/orders/${order.id}/detail`}
-                        className="ml-2 text-gray-600 dark:text-gray-400 hover:underline"
-                    >
-                        <Info className="size-4" />
-                    </Link>
+                    <Tooltip text="Detail Order">
+                        <Link
+                            href={`/orders/${order.id}/detail`}
+                            className="ml-2 text-gray-600 dark:text-gray-400 hover:underline"
+                        >
+                            <Info className="size-4" />
+                        </Link>
+                    </Tooltip>
+
+                    {order.status != "Pending" && (
+                        <Tooltip text="Lembar Kerja">
+                            <Link
+                                href={`/orders/${order.id}/worksheet`}
+                                className="ml-2 text-gray-600 dark:text-gray-400 hover:underline"
+                            >
+                                <ClipboardPenLine className="size-4" />
+                            </Link>
+                        </Tooltip>
+                    )}
                 </div>
             ),
         },
