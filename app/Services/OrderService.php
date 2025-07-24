@@ -84,15 +84,6 @@ class OrderService{
                             'item_order_id' => $itemOrder->id,
                             'estimation_date' => $maintenanceDate->toDateString(),
                         ]);
-
-                        $checklists = $itemOrder->item->checklists;
-                        foreach($checklists as $checklist){
-                            $this->itemOrderChecklistRepository->store([
-                                'item_order_maintenance_id' => $itemOrderMaintenance->id,
-                                'name' => $checklist->name,
-                                'description' => $checklist->description,
-                            ]);
-                        }
                     }
                 }
             }
