@@ -1,5 +1,6 @@
 import { Briefcase, Home, ShoppingBag, Users } from "lucide-react";
 import SidebarLink from "./SideBarLink";
+import CheckRoles from "../../utils/CheckRoles";
 
 export default function Sidebar({ isOpen, setIsOpen }) {
     return (
@@ -35,7 +36,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     icon={Home}
                                 />
                             </div>
-                            <div className="px-3 py-5">
+                            <div className="px-3">
                                 <div className="py-2">
                                     <h3 className="text-xs font-medium tracking-wider text-slate-500 dark:text-slate-400">
                                         Layanan
@@ -59,24 +60,38 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     icon={ShoppingBag}
                                 />
                             </div>
-                            <div className="px-3 py-5">
-                                <div className="py-2">
-                                    <h3 className="text-xs font-medium tracking-wider text-slate-500 dark:text-slate-400">
-                                        Manajemen
-                                    </h3>
-                                </div>
-                                <SidebarLink
-                                    name="Pengguna"
-                                    href="/users"
-                                    icon={Users}
-                                    roles={["Superadmin", "Admin", "Manager"]}
-                                />
-                                <SidebarLink
-                                    name="Klien"
-                                    href="/clients"
-                                    icon={Users}
-                                />
-                            </div>
+                            <CheckRoles
+                                roles={["Superadmin", "Admin", "Manager"]}
+                                children={
+                                    <div className="px-3">
+                                        <div className="py-2">
+                                            <h3 className="text-xs font-medium tracking-wider text-slate-500 dark:text-slate-400">
+                                                Manajemen
+                                            </h3>
+                                        </div>
+                                        <SidebarLink
+                                            name="Pengguna"
+                                            href="/users"
+                                            icon={Users}
+                                            roles={[
+                                                "Superadmin",
+                                                "Admin",
+                                                "Manager",
+                                            ]}
+                                        />
+                                        <SidebarLink
+                                            name="Klien"
+                                            href="/clients"
+                                            icon={Users}
+                                            roles={[
+                                                "Superadmin",
+                                                "Admin",
+                                                "Manager",
+                                            ]}
+                                        />
+                                    </div>
+                                }
+                            />
                         </div>
                         <div className="flex-shrink-0 p-3">
                             <div className="px-3 py-2.5 rounded-lg bg-[#E6F5F5] dark:bg-slate-700/30">
