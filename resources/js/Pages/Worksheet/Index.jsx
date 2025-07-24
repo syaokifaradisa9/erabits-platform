@@ -189,6 +189,10 @@ export default function WorksheetIndex({ order, maintenances }) {
                     return "-";
                 }
 
+                const hasBrokenChecklist = item.checklists.some(
+                    (checklist) => checklist.condition === "Rusak"
+                );
+
                 return (
                     <div className="flex flex-wrap items-center">
                         <Tooltip text="Lembar Kerja">
@@ -209,24 +213,26 @@ export default function WorksheetIndex({ order, maintenances }) {
                                 <SquarePen className="size-4" />
                             </Link>
                         </Tooltip>
-                        <Tooltip text="Perbaikan">
-                            <Link
-                                href={
-                                    isEnabled
-                                        ? `/orders/${order.id}/worksheet/${item.id}`
-                                        : "#"
-                                }
-                                className={`ml-2 ${
-                                    isEnabled
-                                        ? "text-gray-600 dark:text-gray-400 hover:underline"
-                                        : "text-gray-400 dark:text-gray-600 cursor-not-allowed"
-                                }`}
-                                as="button"
-                                disabled={!isEnabled}
-                            >
-                                <Wrench className="size-4" />
-                            </Link>
-                        </Tooltip>
+                        {hasBrokenChecklist && (
+                            <Tooltip text="Perbaikan">
+                                <Link
+                                    href={
+                                        isEnabled
+                                            ? `/orders/${order.id}/worksheet/${item.id}`
+                                            : "#"
+                                    }
+                                    className={`ml-2 ${
+                                        isEnabled
+                                            ? "text-gray-600 dark:text-gray-400 hover:underline"
+                                            : "text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                                    }`}
+                                    as="button"
+                                    disabled={!isEnabled}
+                                >
+                                    <Wrench className="size-4" />
+                                </Link>
+                            </Tooltip>
+                        )}
                     </div>
                 );
             },

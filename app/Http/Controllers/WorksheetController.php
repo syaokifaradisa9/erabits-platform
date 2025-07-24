@@ -18,7 +18,7 @@ class WorksheetController extends Controller
 
     public function index(Request $request, Order $order)
     {
-        $order->load(['maintenances.itemOrder.item.serviceItemType']);
+        $order->load(['maintenances.itemOrder.item.serviceItemType', 'maintenances.checklists']);
 
         return Inertia::render('Worksheet/Index', [
             'order' => $order,
