@@ -157,7 +157,6 @@ export default function WorksheetIndex({ order, maintenances }) {
         { label: "Merek, Model, SN" },
         { label: "Estimasi Jadwal", sortable: true, field: "estimation_date" },
         { label: "Tanggal Pengerjaan", sortable: true, field: "finish_date" },
-        { label: "Petugas Pengerjaan" },
         { label: "Aksi" },
     ];
 
@@ -182,9 +181,6 @@ export default function WorksheetIndex({ order, maintenances }) {
         },
         {
             render: (item) => formatIndonesianDate(item.finish_date),
-        },
-        {
-            render: (item) => "-",
         },
         {
             render: (item) => {
