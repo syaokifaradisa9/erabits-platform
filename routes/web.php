@@ -5,6 +5,7 @@ use App\Http\Controllers\ConsumableController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientInventoryController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserController;
@@ -80,6 +81,12 @@ Route::middleware('auth')->group(function () {
             Route::put("update", "update")->name("update");
             Route::delete("delete", "delete")->name("delete");
         });
+    });
+
+    Route::prefix("client-inventories")->name("client-inventories.")->controller(ClientInventoryController::class)->group(function () {
+        Route::get("/", "index")->name("index");
+        Route::get("datatable", "datatable")->name("datatable");
+        Route::get("{inventory}/maintenances", "maintenances")->name("maintenances");
     });
 
     Route::prefix("orders")->name("orders.")->group(function () {

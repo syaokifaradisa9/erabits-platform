@@ -26,4 +26,9 @@ class ClientInventory extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function serviceItemType(){
+        return $this->belongsTo(ServiceItemType::class);
+    }
+
 }

@@ -4,27 +4,33 @@ namespace App\Http\Controllers;
 
 use App\Datatables\ClientInventoryDatatableService;
 use App\Http\Requests\Common\DatatableRequest;
+use App\Models\ClientInventory;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class ClientInventoryController extends Controller
 {
-    public function __construct(
-        protected ClientInventoryDatatableService $datatableService
-    ){}
-
-    public function index(){
-        return Inertia::render("ClientInventory/Index");
+    public function __construct(protected ClientInventoryDatatableService $datatableService)
+    {
     }
 
-    public function datatable(DatatableRequest $request){
-        return $this->datatableService->getDatatable($request);
+    public function index()
+    {
+        return Inertia::render('ClientInventory/Index');
     }
 
-    public function printPdf(DatatableRequest $request){
-        return $this->datatableService->printPdf($request);
+    public function datatable(DatatableRequest $request)
+    {
+        $user = Auth::user();
+        return $this->datatableService->getDatatable($request, $user);
     }
 
-    public function printExcel(DatatableRequest $request){
-        return $this->datatableService->printExcel($request);
+    public function maintenances(ClientInventory $inventory)
+    {
+        $inventory->load('maintenances.itemOrder.item.serviceItemType');
+        return Inertia::render('ClientInventory/Maintenance', [
+            'inventory' => $inventory,
+            'maintenances' => $inventory->maintenances
+        ]);
     }
 }
