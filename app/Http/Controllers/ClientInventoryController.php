@@ -27,10 +27,7 @@ class ClientInventoryController extends Controller
 
     public function maintenances(ClientInventory $inventory)
     {
-        $inventory->load('maintenances.itemOrder.item.serviceItemType');
-        return Inertia::render('ClientInventory/Maintenance', [
-            'inventory' => $inventory,
-            'maintenances' => $inventory->maintenances
-        ]);
+        $inventory->load('maintenances.itemOrderMaintenance.itemOrder', 'serviceItemType');
+        return Inertia::render('ClientInventory/Maintenance', compact("inventory"));
     }
 }

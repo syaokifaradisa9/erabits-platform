@@ -31,4 +31,8 @@ class ClientInventory extends Model
         return $this->belongsTo(ServiceItemType::class);
     }
 
+    public function maintenances()
+    {
+        return $this->hasMany(ClientInventoryMaintenance::class);
+    }
 }
