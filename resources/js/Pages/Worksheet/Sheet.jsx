@@ -18,14 +18,26 @@ export default function WorksheetSheet({ order, maintenance, conditions }) {
             : new Date().toISOString().split("T")[0],
         checklists:
             maintenance.checklists && maintenance.checklists.length > 0
-                ? maintenance.checklists
+                ? maintenance.checklists.map((checklist) => ({
+                      ...checklist,
+                      repair_status: checklist.repair_status || null,
+                      repair_cost_estimate: checklist.repair_cost_estimate || "",
+                      repair_notes: checklist.repair_notes || "",
+                      repair_started_at: checklist.repair_started_at || null,
+                      repair_completed_at: checklist.repair_completed_at || null,
+                  }))
                 : maintenance.item_order.item.checklists.map((checklist) => ({
                       item_checklist_id: checklist.id,
                       name: checklist.name,
                       description: checklist.description,
                       condition: "Baik",
-                      repair_action: "",
+                      fix_action: "", // ganti dari repair_action
                       notes: "",
+                      repair_status: null,
+                      repair_cost_estimate: "",
+                      repair_notes: "",
+                      repair_started_at: null,
+                      repair_completed_at: null,
                   })),
     });
 
@@ -128,27 +140,89 @@ export default function WorksheetSheet({ order, maintenance, conditions }) {
                                             )}
                                         />
                                         {checklist.condition === "Rusak" && (
-                                            <FormInput
-                                                label="Aksi Perbaikan"
-                                                value={checklist.repair_action}
-                                                onChange={(e) => {
-                                                    const newChecklists = [
-                                                        ...data.checklists,
-                                                    ];
-                                                    newChecklists[
-                                                        index
-                                                    ].repair_action =
-                                                        e.target.value;
-                                                    setData(
-                                                        "checklists",
-                                                        newChecklists
-                                                    );
-                                                }}
-                                            />
+                                            <>
+                                                <FormInput
+                                                    label="Aksi Perbaikan"
+                                                    value={checklist.fix_action}
+                                                    onChange={(e) => {
+                                                        const newChecklists = [
+                                                            ...data.checklists,
+                                                        ];
+                                                        newChecklists[
+                                                            index
+                                                        ].fix_action =
+                                                            e.target.value;
+                                                        setData(
+                                                            "checklists",
+                                                            newChecklists
+                                                        );
+                                                    }}
+                                                />
+                                                <FormSelect
+                                                    label="Status Perbaikan"
+                                                    value={checklist.repair_status || ""}
+                                                    onChange={(e) => {
+                                                        const newChecklists = [
+                                                            ...data.checklists,
+                                                        ];
+                                                        newChecklists[
+                                                            index
+                                                        ].repair_status =
+                                                            e.target.value;
+                                                        setData(
+                                                            "checklists",
+                                                            newChecklists
+                                                        );
+                                                    }}
+                                                    options={[
+                                                        { value: "", label: "Pilih Status" },
+                                                        { value: "pending", label: "Menunggu Persetujuan" },
+                                                        { value: "in_progress", label: "Dalam Perbaikan" },
+                                                        { value: "completed", label: "Selesai" },
+                                                        { value: "declined", label: "Ditolak" },
+                                                    ]}
+                                                />
+                                                <FormInput
+                                                    label="Estimasi Biaya (Rp)"
+                                                    type="number"
+                                                    value={checklist.repair_cost_estimate}
+                                                    onChange={(e) => {
+                                                        const newChecklists = [
+                                                            ...data.checklists,
+                                                        ];
+                                                        newChecklists[
+                                                            index
+                                                        ].repair_cost_estimate =
+                                                            e.target.value;
+                                                        setData(
+                                                            "checklists",
+                                                            newChecklists
+                                                        );
+                                                    }}
+                                                />
+                                                <FormInput
+                                                    label="Catatan Perbaikan"
+                                                    value={checklist.repair_notes}
+                                                    onChange={(e) => {
+                                                        const newChecklists = [
+                                                            ...data.checklists,
+                                                        ];
+                                                        newChecklists[
+                                                            index
+                                                        ].repair_notes =
+                                                            e.target.value;
+                                                        setData(
+                                                            "checklists",
+                                                            newChecklists
+                                                        );
+                                                    }}
+                                                />
+                                            </>
                                         )}
                                         <FormInput
                                             label="Catatan"
                                             value={checklist.notes}
+                                            error={errors[`checklists.${index}.notes`]}
                                             onChange={(e) => {
                                                 const newChecklists = [
                                                     ...data.checklists,

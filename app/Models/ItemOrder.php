@@ -11,9 +11,15 @@ class ItemOrder extends Model
         'item_id',
         'name',
         'price',
+        'quantity',
         'merk',
         'model',
         'identify_number',
+    ];
+
+    protected $casts = [
+        'price' => 'integer',
+        'quantity' => 'integer',
     ];
 
     public function item()

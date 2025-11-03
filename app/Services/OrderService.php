@@ -34,14 +34,14 @@ class OrderService{
             if($dto->items){
                 foreach($dto->items as $itemData){
                     $item = $this->itemRepository->find($itemData['id']);
-                    for($k = 0; $k < $itemData['quantity']; $k++){
-                        $this->itemOrderRepository->store([
-                            'order_id' => $order->id,
-                            'item_id' => $item->id,
-                            'name' => $item->name,
-                            'price' => $item->price
-                        ]);
-                    }
+                    $this->itemOrderRepository->store([
+                        'order_id' => $order->id,
+                        'item_id' => $item->id,
+                        'name' => $item->name,
+                        'price' => $item->price,
+                        'quantity' => $itemData['quantity'],
+                        'notes' => $itemData['notes'] ?? null
+                    ]);
                 }
             }
 
@@ -80,7 +80,7 @@ class OrderService{
 
                     for ($j = 0; $j < $maintenanceCount; $j++) {
                         $maintenanceDate = $currentDate->copy()->addMonths($intervalMonths * ($j + 1));
-                        $itemOrderMaintenance = $this->itemOrderMaintenanceRepository->store([
+                        $this->itemOrderMaintenanceRepository->store([
                             'item_order_id' => $itemOrder->id,
                             'estimation_date' => $maintenanceDate->toDateString(),
                         ]);
@@ -106,15 +106,14 @@ class OrderService{
             if($dto->items){
                 foreach($dto->items as $itemData){
                     $item = $this->itemRepository->find($itemData['id']);
-                    for($i = 0; $i < $itemData['quantity']; $i++){
-                        $this->itemOrderRepository->store([
-                            'order_id' => $order->id,
-                            'item_id' => $item->id,
-                            'name' => $item->name,
-                            'price' => $item->price,
-                            'notes' => $itemData['notes'] ?? null
-                        ]);
-                    }
+                    $this->itemOrderRepository->store([
+                        'order_id' => $order->id,
+                        'item_id' => $item->id,
+                        'name' => $item->name,
+                        'price' => $item->price,
+                        'quantity' => $itemData['quantity'],
+                        'notes' => $itemData['notes'] ?? null
+                    ]);
                 }
             }
 
@@ -133,7 +132,7 @@ class OrderService{
         foreach($groupedItems as $itemId => $items){
             $itemQuantities[] = [
                 'item_id' => $itemId,
-                'quantity' => $items->count()
+                'quantity' => $items->sum('quantity')
             ];
         }
 

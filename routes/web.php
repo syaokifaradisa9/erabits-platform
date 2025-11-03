@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\ServiceCategoryApiController;
+use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConsumableController;
 use App\Http\Controllers\DashboardController;
@@ -9,10 +11,22 @@ use App\Http\Controllers\ClientInventoryController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\MyAssetsController;
 use App\Http\Controllers\WorksheetController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect("/", "/auth/login");
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+// API routes untuk kategori layanan
+Route::prefix('api')->group(function () {
+    Route::get('/service-categories/{categoryId}/items', [ServiceCategoryApiController::class, 'getItemsByCategory']);
+    Route::get('/user', [OrderApiController::class, 'checkUserStatus']);
+    Route::middleware('auth')->group(function () {
+        Route::post('/orders', [OrderApiController::class, 'store']);
+        
+        
+    });
+});
 
 Route::prefix("auth")->name("auth.")->controller(AuthController::class)->group(function () {
     Route::get("login", "login")->name("login");
@@ -24,6 +38,14 @@ Route::middleware('auth')->group(function () {
     Route::prefix("dashboard")->name("dashboard.")->controller(DashboardController::class)->group(function () {
         Route::get("/", "index")->name("index");
     });
+
+    Route::prefix("my-assets")->name("my-assets.")->controller(MyAssetsController::class)->group(function () {
+        Route::get("/", "index")->name("index");
+        Route::get("/{inventory}", "show")->name("show");
+        Route::post("/{inventory}/update-repair-status", "updateRepairStatus")->name("update-repair-status");
+    });
+
+
 
     Route::prefix("consumables")->name("consumables.")->controller(ConsumableController::class)->group(function () {
         Route::get("/", "index")->name("index");
@@ -109,5 +131,9 @@ Route::middleware('auth')->group(function () {
             Route::get("{maintenance}", "sheet")->name("sheet");
             Route::post("{maintenance}/store", "storeSheet")->name("storeSheet");
         });
+    });
+
+    Route::prefix("repair-dashboard")->name("repair-dashboard.")->controller(\App\Http\Controllers\RepairDashboardController::class)->group(function () {
+        Route::get("/", "index")->name("index");
     });
 });

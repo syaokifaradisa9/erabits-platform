@@ -1,4 +1,4 @@
-import { useForm } from "@inertiajs/react";
+import { useForm, router } from "@inertiajs/react";
 import ContentCard from "@/Components/Layouts/ContentCard";
 import RootLayout from "@/Layouts/RootLayout";
 import FormInput from "@/Components/Forms/FormInput";
@@ -14,6 +14,7 @@ export default function ItemCreate({ item, itemServices }) {
         price: item?.price || "",
         maintenance_count: item?.maintenance_count || "",
         checklists: item?.checklists || [],
+        image: null,
     });
 
     const addItemChecklist = () => {
@@ -38,10 +39,12 @@ export default function ItemCreate({ item, itemServices }) {
     function onSubmit(e) {
         e.preventDefault();
         if (item) {
-            put(`/items/${item.id}/update`);
+            router.post(`/items/${item.id}/update`, {
+                _method: "put",
+                ...data,
+            });
             return;
         }
-
         post("/items/store");
     }
 
@@ -102,6 +105,24 @@ export default function ItemCreate({ item, itemServices }) {
                             }
                         />
                     </div>
+
+                    <div className="mt-4">
+                        <FormInput
+                            type="file"
+                            name="image"
+                            label="Gambar Item"
+                            onChange={(e) => setData("image", e.target.files[0])}
+                            error={errors.image}
+                            helpText="Kosongkan jika tidak ingin mengubah gambar."
+                        />
+                    </div>
+
+                    {item?.image_path && (
+                        <div className="mt-4">
+                            <p className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Gambar Saat Ini:</p>
+                            <img src={`/storage/${item.image_path}`} alt="Current item image" className="w-40 h-40 object-cover rounded-lg border border-gray-200" />
+                        </div>
+                    )}
 
                     <div className="mt-6">
                         {data.checklists.map((checklist, index) => (

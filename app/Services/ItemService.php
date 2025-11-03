@@ -7,6 +7,7 @@ use App\Repositories\Item\ItemRepository;
 use App\Repositories\ItemChecklist\ItemChecklistRepository;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ItemService{
     public function __construct(
@@ -17,8 +18,15 @@ class ItemService{
     public function store(ItemDTO $dto){
         DB::beginTransaction();
         try{
+            $itemData = $dto->toItemArray();
+
+            if ($dto->image) {
+                $path = $dto->image->store('items', 'public');
+                $itemData['image_path'] = $path;
+            }
+
             $item = $this->repository->store(
-                $dto->toItemArray()
+                $itemData
             );
 
             foreach($dto->toChecklistsArray() as $checklist){
@@ -37,9 +45,20 @@ class ItemService{
     public function update($itemId, ItemDTO $dto){
         DB::beginTransaction();
         try{
+            $itemData = $dto->toItemArray();
+            $item = $this->repository->find($itemId);
+
+            if ($dto->image) {
+                if ($item->image_path) {
+                    Storage::disk('public')->delete($item->image_path);
+                }
+                $path = $dto->image->store('items', 'public');
+                $itemData['image_path'] = $path;
+            }
+
             $item = $this->repository->update(
                 $itemId,
-                $dto->toItemArray()
+                $itemData
             );
 
             $this->itemChecklistRepository->deleteByItemId($item->id);

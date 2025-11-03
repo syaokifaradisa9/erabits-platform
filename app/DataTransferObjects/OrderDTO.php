@@ -4,6 +4,7 @@ namespace App\DataTransferObjects;
 
 use App\Enum\UserRole;
 use App\Http\Requests\OrderRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class OrderDTO
@@ -24,6 +25,14 @@ class OrderDTO
                     'quantity' => (int) $item['quantity']
                 ];
             })->toArray()
+        );
+    }
+
+    public static function fromApiRequest(Request $request, int $clientId): self
+    {
+        return new self(
+            clientId: $clientId,
+            items: $request->input('items', [])
         );
     }
 }

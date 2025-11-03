@@ -3,6 +3,7 @@
 namespace App\DataTransferObjects;
 
 use App\Http\Requests\Item\ItemRequest;
+use Illuminate\Http\Request;
 
 class ItemDTO
 {
@@ -11,7 +12,8 @@ class ItemDTO
         public readonly string $name,
         public readonly string $price,
         public readonly int $maintenanceCount,
-        public readonly array $checklists = []
+        public readonly array $checklists = [],
+        public readonly ?object $image = null
     ) {}
 
     public static function fromAppRequest(ItemRequest $request){
@@ -20,7 +22,8 @@ class ItemDTO
             price: $request->price,
             serviceItemTypeId: $request->service_item_type_id,
             maintenanceCount: $request->maintenance_count,
-            checklists: $request->checklists ?? []
+            checklists: $request->checklists ?? [],
+            image: $request->file('image')
         );
     }
 

@@ -27,6 +27,11 @@ class User extends Authenticatable
         return $this->belongsTo(ServiceItemType::class);
     }
 
+    public function clientInventories()
+    {
+        return $this->hasMany(ClientInventory::class);
+    }
+
     protected $hidden = [
         'password',
         'remember_token',

@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ]
         )->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
+            'CheckClientRole' => \App\Http\Middleware\CheckClientRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

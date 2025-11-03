@@ -59,6 +59,18 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     href="/orders"
                                     icon={ShoppingBag}
                                 />
+                                <SidebarLink
+                                    name="Aset Saya"
+                                    href="/my-assets"
+                                    icon={Briefcase}
+                                    roles={["Client"]}
+                                />
+                                <SidebarLink
+                                    name="Dashboard Perbaikan"
+                                    href="/repair-dashboard"
+                                    icon={Briefcase}
+                                    roles={["Superadmin", "Admin", "Manager", "Officer"]}
+                                />
                             </div>
                             <div className="px-3 mt-2">
                                 <div className="py-2">

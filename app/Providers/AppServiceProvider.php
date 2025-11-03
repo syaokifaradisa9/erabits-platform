@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
+use App\Models\ServiceItemType;
+use App\Models\Item;
+use App\Observers\ServiceItemTypeObserver;
+use App\Observers\ItemObserver;
 use App\Repositories\Item\ItemRepository;
 use App\Repositories\User\UserRepository;
 use App\Repositories\Order\OrderRepository;
@@ -61,6 +65,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        // Daftarkan observers
+        ServiceItemType::observe(ServiceItemTypeObserver::class);
+        Item::observe(ItemObserver::class);
+
+        // Daftarkan middleware role dari Spatie
+        \Illuminate\Support\Facades\Route::aliasMiddleware('role', \Spatie\Permission\Middleware\RoleMiddleware::class);
     }
 }

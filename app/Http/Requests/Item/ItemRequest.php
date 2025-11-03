@@ -21,6 +21,7 @@ class ItemRequest extends FormRequest
             'checklists' => 'array',
             'checklists.*.name' => 'required|string',
             'checklists.*.description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
 

@@ -19,8 +19,16 @@ class AuthController extends Controller
     public function verify(LoginRequest $request){
         try {
             $this->service->login($request->email, $request->password);
+
+            if ($request->wantsJson()) {
+                return response()->json(['user' => auth()->user()]);
+            }
+            
             return to_route("dashboard.index");
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
             return back()->withErrors(['email' => $e->getMessage()]);
         }
     }
