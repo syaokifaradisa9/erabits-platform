@@ -118,7 +118,7 @@ function AllItemsModal({ isOpen, onClose, category, onAddToCart }) {
                                                     )}
                                                     {item.image_path && !imgStates[item.id]?.error ? (
                                                         <img 
-                                                            src={`/storage/${item.image_path}`} 
+                                                            src={`/storage/${item.image_path}?t=${new Date().getTime()}`} 
                                                             alt={item.name} 
                                                             className={`w-full h-48 object-contain p-4 bg-gray-50 transition-opacity duration-300 ${imgStates[item.id]?.loaded ? 'opacity-100' : 'opacity-0 absolute'}`}
                                                             onLoad={() => handleImageLoad(item.id)}

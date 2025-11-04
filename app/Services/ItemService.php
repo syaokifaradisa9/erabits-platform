@@ -61,11 +61,32 @@ class ItemService{
                 $itemData
             );
 
-            $this->itemChecklistRepository->deleteByItemId($item->id);
-            foreach($dto->toChecklistsArray() as $checklist){
-                $checklist['item_id'] = $item->id;
+            // Sync Checklists only if checklist data is present in the request
+            $incomingChecklistsData = $dto->toChecklistsArray();
+            if (!empty($incomingChecklistsData)) {
+                $incomingChecklists = collect($incomingChecklistsData);
+                $existingChecklists = $this->itemChecklistRepository->findByItemId($item->id);
 
-                $this->itemChecklistRepository->store($checklist);
+                // 1. Delete checklists that are no longer in the request
+                $incomingIds = $incomingChecklists->pluck('id')->filter();
+                $existingIds = $existingChecklists->pluck('id');
+                $idsToDelete = $existingIds->diff($incomingIds);
+
+                if ($idsToDelete->isNotEmpty()) {
+                    $this->itemChecklistRepository->deleteByIds($idsToDelete->all());
+                }
+
+                // 2. Update existing or create new checklists
+                foreach ($incomingChecklists as $checklistData) {
+                    $checklistData['item_id'] = $item->id;
+                    if (isset($checklistData['id']) && !empty($checklistData['id'])) {
+                        // Update existing checklist
+                        $this->itemChecklistRepository->update($checklistData['id'], $checklistData);
+                    } else {
+                        // Create new checklist
+                        $this->itemChecklistRepository->store($checklistData);
+                    }
+                }
             }
 
             DB::commit();

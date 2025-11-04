@@ -37,8 +37,13 @@ class ItemDatatableService implements DatatableService{
     public function getDatatable(DatatableRequest $request, $loggedUser, $additionalData = []){
         $limit = $request->limit ?? 5;
 
-        $records = $this->getStartedQuery($request, $loggedUser);
-        $records = $records->paginate($limit);
+        $query = $this->getStartedQuery($request, $loggedUser);
+        $records = $query->paginate($limit);
+
+        $records->getCollection()->transform(function ($item) {
+            $item->image_url = $item->image_path ? \Illuminate\Support\Facades\Storage::url($item->image_path) : 'https://placehold.co/600x400/e2e8f0/e2e8f0?text=+';
+            return $item;
+        });
 
         return $records;
     }

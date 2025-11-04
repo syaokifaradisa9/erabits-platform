@@ -46,7 +46,7 @@ function ItemCard({ item, onAddToCart, isMobile = false }) {
                 )}
                 {item.image_path && !imgError ? (
                     <img 
-                        src={`/storage/${item.image_path}`} 
+                        src={`/storage/${item.image_path}?t=${new Date().getTime()}`} 
                         alt={item.name} 
                         className={`w-full ${isMobile ? 'h-40' : 'h-48'} object-contain p-4 bg-gray-50 transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
                         onLoad={() => setImgLoaded(true)}
