@@ -13,39 +13,31 @@ class MyAssetsController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $filter = $request->query('filter');
+        $filters = $request->only(['search', 'type', 'status']);
 
-        // Base query untuk inventories
+        // Base query
         $query = ClientInventory::where('user_id', $user->id)->with('serviceItemType');
 
-        // Jika filter 'needs_repair', hanya tampilkan inventaris yang memiliki item perlu perbaikan
-        if ($filter === 'needs_repair') {
-            $query->whereHas('maintenances.itemOrderMaintenance.checklists', function ($subQuery) {
-                $subQuery->where('condition', 'rusak')
-                         ->where(function ($subSubQuery) {
-                             $subSubQuery->where('repair_status', null)
-                                         ->orWhere('repair_status', 'pending')
-                                         ->orWhere('repair_status', 'in_progress');
-                         });
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('identify_number', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%");
             });
         }
 
-        $inventories = $query->latest('updated_at')->get();
+        // Apply type filter
+        if ($request->filled('type')) {
+            $type = $request->input('type');
+            $query->whereHas('serviceItemType', function ($q) use ($type) {
+                $q->where('name', $type);
+            });
+        }
 
-        // Hitung jumlah item yang perlu perbaikan untuk user ini
-        $needsRepairCount = ItemOrderChecklist::whereHas('itemOrderMaintenance.clientInventoryMaintenance.clientInventory', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })
-            ->where('condition', 'rusak')
-            ->where(function ($query) {
-                $query->where('repair_status', null)
-                      ->orWhere('repair_status', 'pending')
-                      ->orWhere('repair_status', 'in_progress');
-            })
-            ->count();
-
-        // Ambil daftar inventaris yang memiliki item perlu perbaikan
-        $inventoriesWithRepair = ClientInventory::where('user_id', $user->id)
+        // Get IDs of inventories that need repair before applying status filter
+        $inventoriesWithRepairIds = ClientInventory::where('user_id', $user->id)
             ->whereHas('maintenances.itemOrderMaintenance.checklists', function ($query) {
                 $query->where('condition', 'rusak')
                       ->where(function ($subQuery) {
@@ -54,14 +46,47 @@ class MyAssetsController extends Controller
                                    ->orWhere('repair_status', 'in_progress');
                       });
             })
-            ->pluck('id')
-            ->toArray();
+            ->pluck('id');
+
+        // Apply status filter
+        if ($request->filled('status')) {
+            if ($request->input('status') === 'needs_repair') {
+                $query->whereIn('id', $inventoriesWithRepairIds);
+            } elseif ($request->input('status') === 'normal') {
+                $query->whereNotIn('id', $inventoriesWithRepairIds);
+            }
+        }
+
+        $inventories = $query->latest('updated_at')->get();
+
+        // Map data for frontend
+        $inventoriesData = $inventories->map(function ($inventory) use ($inventoriesWithRepairIds) {
+            $status = $inventoriesWithRepairIds->contains($inventory->id) ? 'needs_repair' : 'normal';
+            return [
+                'id' => $inventory->id,
+                'name' => $inventory->name,
+                'location' => $inventory->location,
+                'identify_number' => $inventory->identify_number,
+                'updated_at' => $inventory->updated_at,
+                'service_item_type' => $inventory->serviceItemType,
+                'status' => $status,
+                'image_url' => $inventory->image_url ?? 'https://placehold.co/600x400/e2e8f0/e2e8f0?text=+',
+            ];
+        });
+
+        // Count items needing repair for the top banner
+        $needsRepairCount = $inventoriesWithRepairIds->count();
+        
+        // Get all asset types for the filter dropdown
+        $assetTypes = \App\Models\ServiceItemType::whereHas('clientInventories', function($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->pluck('name');
 
         return Inertia::render('MyAssets/Index', [
-            'inventories' => $inventories,
+            'inventories' => $inventoriesData,
             'needs_repair_count' => $needsRepairCount,
-            'inventories_with_repair' => $inventoriesWithRepair,
-            'filter' => $filter,
+            'asset_types' => $assetTypes,
+            'filters' => $filters,
         ]);
     }
 
