@@ -27,6 +27,10 @@ class WorksheetStoreRequest extends FormRequest
             'identify_number' => 'required|string|max:255',
             'finish_date' => 'required|date',
             'location' => 'required|string|max:255',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:10240', // max 10MB for after maintenance image
+            'asset_image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:10240', // max 10MB for asset image
+            'delete_image' => 'boolean',
+            'delete_asset_image' => 'boolean',
             'checklists' => 'required|array',
             'checklists.*.condition' => 'required|string',
             'checklists.*.notes' => 'required|string',

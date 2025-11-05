@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DataTransferObjects\ItemDTO;
 use App\Repositories\Item\ItemRepository;
 use App\Repositories\ItemChecklist\ItemChecklistRepository;
+use App\Services\ServiceCategoryCacheService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -12,7 +13,8 @@ use Illuminate\Support\Facades\Storage;
 class ItemService{
     public function __construct(
         protected ItemRepository $repository,
-        protected ItemChecklistRepository $itemChecklistRepository
+        protected ItemChecklistRepository $itemChecklistRepository,
+        protected ServiceCategoryCacheService $cacheService
     ){}
 
     public function store(ItemDTO $dto){
@@ -33,6 +35,9 @@ class ItemService{
                 $checklist['item_id'] = $item->id;
                 $this->itemChecklistRepository->store($checklist);
             }
+
+            // Clear the home page cache since item data has changed
+            $this->cacheService->clearCache();
 
             DB::commit();
             return $item;
@@ -89,6 +94,12 @@ class ItemService{
                 }
             }
 
+            // Update related ItemOrders to reflect the new item name
+            $item->itemOrders()->update(['name' => $item->name]);
+
+            // Clear the home page cache since item data has changed
+            $this->cacheService->clearCache();
+
             DB::commit();
             return $item;
         }catch(Exception $e){
@@ -102,6 +113,10 @@ class ItemService{
         try{
             $this->itemChecklistRepository->deleteByItemId($itemId);
             $isSuccess = $this->repository->delete($itemId);
+
+            // Clear the home page cache since item data has changed
+            $this->cacheService->clearCache();
+
             DB::commit();
 
             return $isSuccess;

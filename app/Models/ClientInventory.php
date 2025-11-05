@@ -16,6 +16,7 @@ class ClientInventory extends Model
         'identify_number',
         'location',
         'last_maintenance_date',
+        'customer_image_path',
     ];
 
     protected $casts = [

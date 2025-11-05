@@ -31,4 +31,8 @@ class Item extends Model
     public function checklists(){
         return $this->hasMany(ItemChecklist::class);
     }
+    
+    public function itemOrders(){
+        return $this->hasMany(ItemOrder::class);
+    }
 }

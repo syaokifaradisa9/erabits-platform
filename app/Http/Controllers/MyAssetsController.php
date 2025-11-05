@@ -57,11 +57,89 @@ class MyAssetsController extends Controller
             }
         }
 
-        $inventories = $query->latest('updated_at')->get();
+        $inventories = $query->with('maintenances.itemOrderMaintenance')->latest('updated_at')->get();
 
         // Map data for frontend
         $inventoriesData = $inventories->map(function ($inventory) use ($inventoriesWithRepairIds) {
             $status = $inventoriesWithRepairIds->contains($inventory->id) ? 'needs_repair' : 'normal';
+            
+            // Ambil item_order_maintenance terbaru yang terkait dengan inventory ini berdasarkan kesamaan data dan memiliki asset_image_path
+            $latestItemOrderMaintenance = \App\Models\ItemOrderMaintenance::whereNotNull('asset_image_path')
+                ->whereHas('itemOrder', function ($query) use ($inventory) {
+                    $query->where('name', $inventory->name)
+                          ->where('merk', $inventory->merk)
+                          ->where('model', $inventory->model)
+                          ->where('identify_number', $inventory->identify_number);
+                })
+                ->whereHas('itemOrder.item.serviceItemType', function ($query) use ($inventory) {
+                    $query->where('id', $inventory->service_item_type_id);
+                })
+                ->whereHas('itemOrder.order', function ($query) use ($inventory) {
+                    $query->where('client_id', $inventory->user_id);
+                })
+                ->with('itemOrder')
+                ->orderBy('finish_date', 'DESC')
+                ->orderBy('created_at', 'DESC')
+                ->orderBy('id', 'DESC')  // Tambahkan urutan berdasarkan ID terakhir sebagai fallback
+                ->first();
+                
+            // Logging untuk debugging
+            \Log::info('MyAssetsController - Latest ItemOrderMaintenance Query', [
+                'inventory_id' => $inventory->id,
+                'inventory_name' => $inventory->name,
+                'inventory_identify_number' => $inventory->identify_number,
+                'found_maintenance_id' => $latestItemOrderMaintenance ? $latestItemOrderMaintenance->id : null,
+                'found_asset_image_path' => $latestItemOrderMaintenance ? $latestItemOrderMaintenance->asset_image_path : null,
+                'found_finish_date' => $latestItemOrderMaintenance ? $latestItemOrderMaintenance->finish_date : null,
+                'found_created_at' => $latestItemOrderMaintenance ? $latestItemOrderMaintenance->created_at : null,
+            ]);
+            
+            // Logging untuk melihat semua maintenance terkait
+            $allRelatedMaintenances = \App\Models\ItemOrderMaintenance::whereHas('itemOrder', function ($query) use ($inventory) {
+                    $query->where('name', $inventory->name)
+                          ->where('merk', $inventory->merk)
+                          ->where('model', $inventory->model)
+                          ->where('identify_number', $inventory->identify_number);
+                })
+                ->whereHas('itemOrder.item.serviceItemType', function ($query) use ($inventory) {
+                    $query->where('id', $inventory->service_item_type_id);
+                })
+                ->whereHas('itemOrder.order', function ($query) use ($inventory) {
+                    $query->where('client_id', $inventory->user_id);
+                })
+                ->orderBy('finish_date', 'DESC')
+                ->orderBy('created_at', 'DESC')
+                ->get(['id', 'asset_image_path', 'finish_date', 'created_at']);
+                
+            \Log::info('MyAssetsController - All Related Maintenances', [
+                'inventory_id' => $inventory->id,
+                'inventory_name' => $inventory->name,
+                'maintenances' => $allRelatedMaintenances->map(function ($m) {
+                    return [
+                        'id' => $m->id,
+                        'asset_image_path' => $m->asset_image_path,
+                        'finish_date' => $m->finish_date,
+                        'created_at' => $m->created_at,
+                    ];
+                })->toArray()
+            ]);
+            
+            $latestMaintenanceImagePath = $latestItemOrderMaintenance?->image_path;
+            $latestAssetImagePath = $latestItemOrderMaintenance?->asset_image_path;
+            
+            // Urutan prioritas: 
+            // 1. customer_image_path (jika pelanggan upload)
+            // 2. asset_image_path (foto alat dari teknisi)
+            // 3. image_path (foto hasil pemeliharaan)
+            $imageUrl = null;
+            if ($inventory->customer_image_path) {
+                $imageUrl = asset('storage/' . $inventory->customer_image_path);
+            } else if ($latestAssetImagePath) {
+                $imageUrl = asset('storage/' . $latestAssetImagePath);
+            } else if ($latestMaintenanceImagePath) {
+                $imageUrl = asset('storage/' . $latestMaintenanceImagePath);
+            }
+            
             return [
                 'id' => $inventory->id,
                 'name' => $inventory->name,
@@ -70,7 +148,7 @@ class MyAssetsController extends Controller
                 'updated_at' => $inventory->updated_at,
                 'service_item_type' => $inventory->serviceItemType,
                 'status' => $status,
-                'image_url' => $inventory->image_url ?? 'https://placehold.co/600x400/e2e8f0/e2e8f0?text=+',
+                'image_url' => $imageUrl ?: ($inventory->image_url ?? 'https://placehold.co/600x400/e2e8f0/e2e8f0?text=+'),
             ];
         });
 
@@ -165,6 +243,8 @@ class MyAssetsController extends Controller
                         'item_order_maintenance' => $itemOrderMaintenance ? [
                             'id' => $itemOrderMaintenance->id,
                             'finish_date' => $itemOrderMaintenance->finish_date,
+                            'image_path' => $itemOrderMaintenance->image_path,
+                            'asset_image_path' => $itemOrderMaintenance->asset_image_path,
                             'created_at' => $itemOrderMaintenance->created_at ? $itemOrderMaintenance->created_at->toISOString() : null,
                             'checklists' => $itemOrderMaintenance->checklists->map(function ($checklist) {
                                 return [

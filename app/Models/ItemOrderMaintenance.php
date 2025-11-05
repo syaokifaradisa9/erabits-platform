@@ -10,6 +10,8 @@ class ItemOrderMaintenance extends Model
         'item_order_id',
         'estimation_date',
         'finish_date',
+        'image_path',
+        'asset_image_path',
     ];
 
     protected $casts = [

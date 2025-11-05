@@ -8,7 +8,7 @@ import Button from "@/Components/Buttons/Button";
 import { Save } from "lucide-react";
 
 export default function WorksheetSheet({ order, maintenance, conditions }) {
-    const { data, setData, post, errors } = useForm({
+    const { data, setData, post, errors, processing } = useForm({
         merk: maintenance.item_order.merk ?? "",
         model: maintenance.item_order.model ?? "",
         identify_number: maintenance.item_order.identify_number ?? "",
@@ -16,6 +16,10 @@ export default function WorksheetSheet({ order, maintenance, conditions }) {
         finish_date: maintenance.finish_date
             ? new Date(maintenance.finish_date).toISOString().split("T")[0]
             : new Date().toISOString().split("T")[0],
+        image: null, // for after maintenance image
+        asset_image: null, // for asset identification image
+        delete_image: false, // flag to delete existing image
+        delete_asset_image: false, // flag to delete existing asset image
         checklists:
             maintenance.checklists && maintenance.checklists.length > 0
                 ? maintenance.checklists.map((checklist) => ({
@@ -43,7 +47,9 @@ export default function WorksheetSheet({ order, maintenance, conditions }) {
 
     function handleSubmit(e) {
         e.preventDefault();
-        post(`/orders/${order.id}/worksheet/${maintenance.id}/store`);
+        post(`/orders/${order.id}/worksheet/${maintenance.id}/store`, {
+            forceFormData: true
+        });
     }
 
     return (
@@ -240,11 +246,101 @@ export default function WorksheetSheet({ order, maintenance, conditions }) {
                             )}
                         />
                     </div>
+                    
+                    <div className="mb-4">
+                        <FormInput
+                            type="file"
+                            name="asset_image"
+                            label="Foto Alat"
+                            onChange={(e) => setData("asset_image", e.target.files[0])}
+                            error={errors.asset_image}
+                            helpText="Upload foto alat sebelum pemeliharaan (opsional)"
+                        />
+                    </div>
+                    
+                    {maintenance.asset_image_path && (
+                        <div className="mb-4">
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Foto Alat Sebelumnya:</p>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        // Tambahkan flag untuk menghapus gambar yang sudah ada
+                                        setData('delete_asset_image', true);
+                                    }}
+                                    className="inline-flex items-center px-2 py-1 text-sm font-medium text-center text-white bg-red-600 rounded-md hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900"
+                                >
+                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Hapus
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <img 
+                                    src={`/storage/${maintenance.asset_image_path}`} 
+                                    alt="Foto alat sebelumnya" 
+                                    className="w-40 h-40 object-cover rounded-lg border border-gray-200"
+                                />
+                                {data.delete_asset_image && (
+                                    <div className="absolute inset-0 bg-red-500 bg-opacity-50 flex items-center justify-center rounded-lg">
+                                        <span className="text-white font-bold">Akan Dihapus</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div className="mb-4">
+                        <FormInput
+                            type="file"
+                            name="image"
+                            label="Bukti Pemeliharaan"
+                            onChange={(e) => setData("image", e.target.files[0])}
+                            error={errors.image}
+                            helpText="Upload foto bukti pemeliharaan (opsional)"
+                        />
+                    </div>
+                    
+                    {maintenance.image_path && (
+                        <div className="mb-4">
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Bukti Pemeliharaan Sebelumnya:</p>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        // Tambahkan flag untuk menghapus gambar yang sudah ada
+                                        setData('delete_image', true);
+                                    }}
+                                    className="inline-flex items-center px-2 py-1 text-sm font-medium text-center text-white bg-red-600 rounded-md hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900"
+                                >
+                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Hapus
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <img 
+                                    src={`/storage/${maintenance.image_path}`} 
+                                    alt="Foto bukti pemeliharaan sebelumnya" 
+                                    className="w-40 h-40 object-cover rounded-lg border border-gray-200"
+                                />
+                                {data.delete_image && (
+                                    <div className="absolute inset-0 bg-red-500 bg-opacity-50 flex items-center justify-center rounded-lg">
+                                        <span className="text-white font-bold">Akan Dihapus</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    
                     <Button
                         type="submit"
                         label="Simpan"
                         className="w-full mt-4"
                         icon={<Save className="size-4" />}
+                        isLoading={processing}
                     />
                 </form>
             </ContentCard>

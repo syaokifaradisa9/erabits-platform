@@ -12,7 +12,11 @@ class WorksheetDTO
         public readonly string $identify_number,
         public readonly string $finish_date,
         public readonly ?string $location,
-        public readonly array $checklists = []
+        public readonly array $checklists = [],
+        public readonly mixed $image = null,
+        public readonly mixed $asset_image = null,
+        public readonly ?bool $delete_image = false,
+        public readonly ?bool $delete_asset_image = false
     ) {
     }
 
@@ -24,7 +28,11 @@ class WorksheetDTO
             identify_number: $request->input('identify_number'),
             finish_date: $request->input('finish_date'),
             location: $request->input('location'),
-            checklists: $request->input('checklists', [])
+            checklists: $request->input('checklists', []),
+            image: $request->file('image'),
+            asset_image: $request->file('asset_image'),
+            delete_image: $request->input('delete_image', false),
+            delete_asset_image: $request->input('delete_asset_image', false)
         );
     }
 

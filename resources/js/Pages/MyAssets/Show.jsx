@@ -242,6 +242,30 @@ export default function Show({ inventory, filter }) {
                                             <h4 className={`text-lg font-semibold ${needsRepair ? 'text-red-600' : hasBrokenItems ? 'text-orange-600' : 'text-green-600'}`}>
                                                 Status: {needsRepair ? 'Perlu Perbaikan' : hasBrokenItems ? 'Ditemukan Kerusakan' : 'Kondisi Baik'}
                                             </h4>
+                                            
+                                            {/* Bukti pemeliharaan jika tersedia */}
+                                            {maintenance.item_order_maintenance.image_path && (
+                                                <div className="mt-4">
+                                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bukti Pemeliharaan:</p>
+                                                    <img 
+                                                        src={`/storage/${maintenance.item_order_maintenance.image_path}`} 
+                                                        alt="Foto bukti pemeliharaan" 
+                                                        className="w-64 h-64 object-contain border border-gray-200 rounded-lg"
+                                                    />
+                                                </div>
+                                            )}
+                                            
+                                            {/* Foto alat jika tersedia */}
+                                            {maintenance.item_order_maintenance.asset_image_path && (
+                                                <div className="mt-4">
+                                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Foto Alat:</p>
+                                                    <img 
+                                                        src={`/storage/${maintenance.item_order_maintenance.asset_image_path}`} 
+                                                        alt="Foto alat" 
+                                                        className="w-64 h-64 object-contain border border-gray-200 rounded-lg"
+                                                    />
+                                                </div>
+                                            )}
                                             <div className="mt-4">
                                                 <h5 className="font-semibold mb-2">Detail Checklist:</h5>
                                                 <ul className="space-y-2">
