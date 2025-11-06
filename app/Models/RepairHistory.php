@@ -15,6 +15,7 @@ class RepairHistory extends Model
         'notes',
         'updated_by',
         'updated_at',
+        'activity_type',
     ];
 
     protected $casts = [

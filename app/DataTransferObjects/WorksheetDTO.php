@@ -51,6 +51,7 @@ class WorksheetDTO
             'merk' => $this->merk,
             'model' => $this->model,
             'last_maintenance_date' => $this->finish_date,
+            'location' => $this->location, // Tambahkan lokasi ke dalam array untuk ClientInventory
         ];
     }
 }

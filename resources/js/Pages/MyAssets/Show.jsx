@@ -158,16 +158,40 @@ export default function Show({ inventory, filter }) {
                             <h3 className="font-semibold text-gray-500">Tipe Layanan</h3>
                             <p className="text-gray-900 dark:text-white">{inventory.service_item_type.name}</p>
                         </div>
-                        <div>
-                            <h3 className="font-semibold text-gray-500">Lokasi</h3>
-                            <p className="text-gray-900 dark:text-white">{inventory.location}</p>
-                        </div>
+                        {/* Tampilkan lokasi dari maintenance terbaru */}
+                        {inventory.maintenances && inventory.maintenances.length > 0 && (
+                            (() => {
+                                // Ambil maintenance terbaru berdasarkan finish_date atau created_at
+                                const latestMaintenance = inventory.maintenances.reduce((latest, current) => {
+                                    const currentFinishDate = new Date(current.item_order_maintenance?.finish_date || current.item_order_maintenance?.created_at || '1970-01-01');
+                                    const latestFinishDate = new Date(latest.item_order_maintenance?.finish_date || latest.item_order_maintenance?.created_at || '1970-01-01');
+                                    return currentFinishDate > latestFinishDate ? current : latest;
+                                }, inventory.maintenances[0]);
+                                
+                                if (latestMaintenance?.location) {
+                                    return (
+                                        <div>
+                                            <h3 className="font-semibold text-gray-500">Lokasi Pemeliharaan Terakhir</h3>
+                                            <p className="text-gray-900 dark:text-white">{latestMaintenance.location}</p>
+                                        </div>
+                                    );
+                                }
+                                return (
+                                    <div>
+                                        <h3 className="font-semibold text-gray-500">Lokasi Pemeliharaan Terakhir</h3>
+                                        <p className="text-gray-900 dark:text-white">-</p>
+                                    </div>
+                                );
+                            })()
+                        )}
                         <div>
                             <h3 className="font-semibold text-gray-500">Nomor Seri</h3>
                             <p className="text-gray-900 dark:text-white">{inventory.identify_number ?? '-'}</p>
                         </div>
                     </div>
                 </div>
+                
+            
 
                 {/* Filter Options */}
                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -239,9 +263,11 @@ export default function Show({ inventory, filter }) {
                                             <time className="mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">
                                                 {new Date(maintenance.item_order_maintenance.finish_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
                                             </time>
-                                            <h4 className={`text-lg font-semibold ${needsRepair ? 'text-red-600' : hasBrokenItems ? 'text-orange-600' : 'text-green-600'}`}>
-                                                Status: {needsRepair ? 'Perlu Perbaikan' : hasBrokenItems ? 'Ditemukan Kerusakan' : 'Kondisi Baik'}
-                                            </h4>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <h4 className={`text-lg font-semibold ${needsRepair ? 'text-red-600' : hasBrokenItems ? 'text-orange-600' : 'text-green-600'}`}>
+                                                    Status: {needsRepair ? 'Perlu Perbaikan' : hasBrokenItems ? 'Ditemukan Kerusakan' : 'Kondisi Baik'}
+                                                </h4>
+                                            </div>
                                             
                                             {/* Bukti pemeliharaan jika tersedia */}
                                             {maintenance.item_order_maintenance.image_path && (
@@ -268,87 +294,128 @@ export default function Show({ inventory, filter }) {
                                             )}
                                             <div className="mt-4">
                                                 <h5 className="font-semibold mb-2">Detail Checklist:</h5>
-                                                <ul className="space-y-2">
+                                                <div className="space-y-3">
                                                     {maintenanceChecklists.map(checklist => (
-                                                        <li key={checklist.id} className="flex items-start p-2 rounded-md bg-gray-50 dark:bg-gray-700/50">
-                                                            <div className="mr-2 mt-1">{getConditionIcon([checklist])}</div>
-                                                            <div>
-                                                                <p className="font-medium text-gray-800 dark:text-gray-200">{checklist.name}</p>
-                                                                {checklist.condition === 'Rusak' && (
-                                                                    <p className="text-sm text-red-500">
-                                                                        <span className="font-semibold">Saran Perbaikan:</span> {checklist.fix_action || 'Tidak ada saran.'}
-                                                                    </p>
-                                                                )}
-                                                                {checklist.repair_status && (
-                                                                    <div className="mt-1 text-sm">
-                                                                        <p className={`font-semibold ${checklist.repair_status === 'completed' ? 'text-green-600' : checklist.repair_status === 'in_progress' ? 'text-yellow-600' : checklist.repair_status === 'pending' ? 'text-blue-600' : 'text-red-600'}`}>
-                                                                            Status Perbaikan: {checklist.repair_status === 'pending' ? 'Menunggu Persetujuan' : 
-                                                                              checklist.repair_status === 'in_progress' ? 'Dalam Perbaikan' : 
-                                                                              checklist.repair_status === 'completed' ? 'Selesai' : 
-                                                                              checklist.repair_status === 'declined' ? 'Ditolak' : checklist.repair_status}
-                                                                        </p>
-                                                                        {checklist.repair_cost_estimate && (
-                                                                            <p className="text-gray-600">Estimasi Biaya: Rp{Number(checklist.repair_cost_estimate).toLocaleString('id-ID')}</p>
-                                                                        )}
-                                                                        {checklist.repair_notes && (
-                                                                            <p className="text-gray-600">Catatan: {checklist.repair_notes}</p>
-                                                                        )}
-                                                                        {checklist.repair_status === 'pending' && (
-                                                                            <div className="mt-2 flex space-x-2">
-                                                                                <button
-                                                                                    onClick={() => handleApprove(checklist.id)}
-                                                                                    className="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600"
-                                                                                >
-                                                                                    Setuju
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() => handleDecline(checklist.id)}
-                                                                                    className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600"
-                                                                                >
-                                                                                    Tolak
-                                                                                </button>
-                                                                            </div>
-                                                                        )}
-                                                                        {/* History Perbaikan */}
-                                                                        {checklist.repair_histories && checklist.repair_histories.length > 0 && (
-                                                                            <div className="mt-3 border-t border-gray-200 pt-2">
-                                                                                <details className="group">
-                                                                                    <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center">
-                                                                                        <span>Riwayat Perubahan Status</span>
-                                                                                        <svg className="ml-2 h-4 w-4 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                                                        </svg>
-                                                                                    </summary>
-                                                                                    <div className="mt-2 space-y-2">
-                                                                                        {checklist.repair_histories.map((history) => (
-                                                                                            <div key={history.id} className="text-xs bg-gray-50 p-2 rounded">
-                                                                                                <p>
-                                                                                                    <span className="font-medium">Status:</span> 
-                                                                                                    {history.old_status ? `'${history.old_status}' → '${history.new_status}'` : `'${history.new_status}'`}
-                                                                                                </p>
-                                                                                                <p>
-                                                                                                    <span className="font-medium">Oleh:</span> {history.updated_by}
-                                                                                                </p>
-                                                                                                <p>
-                                                                                                    <span className="font-medium">Tanggal:</span> {history.updated_at}
-                                                                                                </p>
-                                                                                                {history.notes && (
-                                                                                                    <p>
-                                                                                                        <span className="font-medium">Catatan:</span> {history.notes}
-                                                                                                    </p>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        ))}
-                                                                                    </div>
-                                                                                </details>
-                                                                            </div>
-                                                                        )}
+                                                        <div key={checklist.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                                            <div className="flex items-start">
+                                                                <div className="mr-3 mt-1">{getConditionIcon([checklist])}</div>
+                                                                <div className="flex-1">
+                                                                    <div className="flex justify-between items-start">
+                                                                        <p className="font-medium text-gray-800 dark:text-gray-200">{checklist.name}</p>
+                                                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                                                            checklist.condition === 'Rusak' ? 'bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-300' : 
+                                                                            checklist.condition === 'Baik' ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300' : 
+                                                                            'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                                        }`}>
+                                                                            {checklist.condition}
+                                                                        </span>
                                                                     </div>
-                                                                )}
+                                                                    {checklist.condition === 'Rusak' && checklist.fix_action && (
+                                                                        <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
+                                                                            <p className="text-sm font-medium text-red-700 dark:text-red-300 mb-1">Perbaikan di Lakukan:</p>
+                                                                            <p className="text-sm text-red-600 dark:text-red-400">{checklist.fix_action}</p>
+                                                                        </div>
+                                                                    )}
+                                                                    {checklist.repair_status && (
+                                                                        <div className="mt-3 p-3 rounded-md border ${
+                                                                            checklist.repair_status === 'pending' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 
+                                                                            checklist.repair_status === 'in_progress' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : 
+                                                                            checklist.repair_status === 'completed' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 
+                                                                            checklist.repair_status === 'declined' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 
+                                                                            'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
+                                                                        }">
+                                                                            <div className="flex justify-between items-center">
+                                                                                <p className="font-medium ${
+                                                                                    checklist.repair_status === 'completed' ? 'text-green-600 dark:text-green-400' : 
+                                                                                    checklist.repair_status === 'in_progress' ? 'text-yellow-600 dark:text-yellow-400' : 
+                                                                                    checklist.repair_status === 'pending' ? 'text-blue-600 dark:text-blue-400' : 
+                                                                                    checklist.repair_status === 'declined' ? 'text-red-600 dark:text-red-400' : 
+                                                                                    'text-gray-600 dark:text-gray-400'
+                                                                                }">
+                                                                                    Status: {checklist.repair_status === 'pending' ? 'Menunggu Persetujuan' : 
+                                                                                      checklist.repair_status === 'in_progress' ? 'Dalam Perbaikan' : 
+                                                                                      checklist.repair_status === 'completed' ? 'Selesai' : 
+                                                                                      checklist.repair_status === 'declined' ? 'Ditolak' : checklist.repair_status}
+                                                                                </p>
+                                                                                {checklist.repair_cost_estimate && (
+                                                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                                                        Rp{Number(checklist.repair_cost_estimate).toLocaleString('id-ID')}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            {checklist.repair_notes && (
+                                                                                <div className="mt-2 text-sm">
+                                                                                    <p className="text-gray-600 dark:text-gray-400">Catatan: {checklist.repair_notes}</p>
+                                                                                </div>
+                                                                            )}
+                                                                            {checklist.repair_status === 'pending' && (
+                                                                                <div className="mt-3 flex space-x-2">
+                                                                                    <button
+                                                                                        onClick={() => handleApprove(checklist.id)}
+                                                                                        className="flex-1 px-3 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 transition-colors"
+                                                                                    >
+                                                                                        Setuju
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => handleDecline(checklist.id)}
+                                                                                        className="flex-1 px-3 py-2 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition-colors"
+                                                                                    >
+                                                                                        Tolak
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    {/* History Perbaikan */}
+                                                                    {checklist.repair_histories && checklist.repair_histories.length > 0 && (
+                                                                        <div className="mt-3">
+                                                                            <details className="group">
+                                                                                <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center hover:text-blue-600 dark:hover:text-blue-400">
+                                                                                    <svg className="mr-2 h-4 w-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                                    </svg>
+                                                                                    <span>Riwayat Perbaikan ({checklist.repair_histories.length})</span>
+                                                                                </summary>
+                                                                                <div className="mt-2 space-y-2">
+                                                                                    {checklist.repair_histories.map((history) => (
+                                                                                        <div key={history.id} className="text-xs bg-gray-50 dark:bg-gray-800/50 p-2 rounded border border-gray-200 dark:border-gray-700">
+                                                                                            <div className="flex justify-between">
+                                                                                                <span className="font-medium">Status:</span>
+                                                                                                <span>{history.updated_at}</span>
+                                                                                            </div>
+                                                                                            <div className="truncate">
+                                                                                                {history.old_status ? `'${history.old_status}' → '${history.new_status}'` : `'${history.new_status}'`}
+                                                                                            </div>
+                                                                                            {history.activity_type && (
+                                                                                                <div className="text-gray-500 dark:text-gray-400">
+                                                                                                    Jenis: {
+                                                                                                        history.activity_type === 'repair_status_change' ? 'Perubahan Status' :
+                                                                                                        history.activity_type === 'condition_change' ? 'Perubahan Kondisi' :
+                                                                                                        history.activity_type === 'client_approval' ? 'Persetujuan Klien' :
+                                                                                                        history.activity_type === 'client_decline' ? 'Penolakan Klien' :
+                                                                                                        history.activity_type === 'fix_action_change' ? 'Perubahan Aksi' : 'Aktivitas'
+                                                                                                    }
+                                                                                                </div>
+                                                                                            )}
+                                                                                            {history.notes && (
+                                                                                                <div className="truncate">
+                                                                                                    {history.notes}
+                                                                                                </div>
+                                                                                            )}
+                                                                                            <div className="text-gray-400 dark:text-gray-500">
+                                                                                                Oleh: {history.updated_by}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </details>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                        </li>
+                                                        </div>
                                                     ))}
-                                                </ul>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

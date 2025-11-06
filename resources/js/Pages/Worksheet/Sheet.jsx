@@ -147,6 +147,71 @@ export default function WorksheetSheet({ order, maintenance, conditions }) {
                                         />
                                         {checklist.condition === "Rusak" && (
                                             <>
+                                                {/* Tampilkan riwayat perbaikan sebelumnya */}
+                                                {/* Riwayat perbaikan sebelumnya dari current checklist */}
+                                                {(checklist.fix_action || checklist.repair_status || checklist.repair_cost_estimate || checklist.repair_notes) && (
+                                                    <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600">
+                                                        <h5 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Perbaikan Saat Ini</h5>
+                                                        {checklist.fix_action && (
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                                <span className="font-medium">Aksi:</span> {checklist.fix_action}
+                                                            </p>
+                                                        )}
+                                                        {checklist.repair_status && (
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                                <span className="font-medium">Status:</span> 
+                                                                {checklist.repair_status === 'pending' ? 'Menunggu Persetujuan' :
+                                                                 checklist.repair_status === 'in_progress' ? 'Dalam Perbaikan' :
+                                                                 checklist.repair_status === 'completed' ? 'Selesai' :
+                                                                 checklist.repair_status === 'declined' ? 'Ditolak' : checklist.repair_status}
+                                                            </p>
+                                                        )}
+                                                        {checklist.repair_cost_estimate && (
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                                <span className="font-medium">Biaya:</span> Rp{Number(checklist.repair_cost_estimate).toLocaleString('id-ID')}
+                                                            </p>
+                                                        )}
+                                                        {checklist.repair_notes && (
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                                <span className="font-medium">Catatan:</span> {checklist.repair_notes}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                
+                                                {/* Riwayat perbaikan dari database sebelumnya */}
+                                                {checklist.repair_histories && checklist.repair_histories.length > 0 && (
+                                                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                                                        <h5 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Riwayat Perbaikan Sebelumnya</h5>
+                                                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                                                            {checklist.repair_histories.map((history, histIndex) => (
+                                                                <div key={history.id} className="text-sm text-blue-700 dark:text-blue-300 p-2 bg-blue-100 dark:bg-blue-800/50 rounded">
+                                                                    <div className="flex justify-between">
+                                                                        <span className="font-medium">
+                                                                            {history.activity_type === 'repair_status_change' && 'Perubahan Status:'}
+                                                                            {history.activity_type === 'condition_change' && 'Perubahan Kondisi:'}
+                                                                            {history.activity_type === 'client_approval' && 'Persetujuan Klien:'}
+                                                                            {history.activity_type === 'client_decline' && 'Penolakan Klien:'}
+                                                                            {!history.activity_type && 'Aktivitas:'}
+                                                                        </span>
+                                                                        <span>{history.updated_at}</span>
+                                                                    </div>
+                                                                    <div>
+                                                                        {history.old_status ? `'${history.old_status}' → '${history.new_status}'` : `'${history.new_status}'`}
+                                                                    </div>
+                                                                    {history.notes && (
+                                                                        <div>
+                                                                            {history.notes}
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="text-xs italic">
+                                                                        Oleh: {history.updated_by}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 <FormInput
                                                     label="Aksi Perbaikan"
                                                     value={checklist.fix_action}
@@ -206,41 +271,38 @@ export default function WorksheetSheet({ order, maintenance, conditions }) {
                                                         );
                                                     }}
                                                 />
+
+                                            </>
+                                        )}
+                                        
+                                        {/* Bagian untuk perbaikan lanjutan */}
+                                        {checklist.condition === "Rusak" && (
+                                            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                                                <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Perbaikan Lanjutan</h4>
+                                                <p className="text-sm text-blue-600 dark:text-blue-400 mb-3">
+                                                    Tambahkan perbaikan lanjutan untuk checklist ini.
+                                                </p>
                                                 <FormInput
-                                                    label="Catatan Perbaikan"
-                                                    value={checklist.repair_notes}
+                                                    label="Aksi Perbaikan Lanjutan"
+                                                    value={checklist.additional_fix_action || ""}
                                                     onChange={(e) => {
                                                         const newChecklists = [
                                                             ...data.checklists,
                                                         ];
                                                         newChecklists[
                                                             index
-                                                        ].repair_notes =
+                                                        ].additional_fix_action =
                                                             e.target.value;
                                                         setData(
                                                             "checklists",
                                                             newChecklists
                                                         );
                                                     }}
+                                                    placeholder="Tambahkan aksi perbaikan baru"
                                                 />
-                                            </>
+                                            </div>
                                         )}
-                                        <FormInput
-                                            label="Catatan"
-                                            value={checklist.notes}
-                                            error={errors[`checklists.${index}.notes`]}
-                                            onChange={(e) => {
-                                                const newChecklists = [
-                                                    ...data.checklists,
-                                                ];
-                                                newChecklists[index].notes =
-                                                    e.target.value;
-                                                setData(
-                                                    "checklists",
-                                                    newChecklists
-                                                );
-                                            }}
-                                        />
+
                                     </div>
                                 </div>
                             )}

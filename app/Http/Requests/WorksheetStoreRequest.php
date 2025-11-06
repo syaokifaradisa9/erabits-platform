@@ -33,7 +33,11 @@ class WorksheetStoreRequest extends FormRequest
             'delete_asset_image' => 'boolean',
             'checklists' => 'required|array',
             'checklists.*.condition' => 'required|string',
-            'checklists.*.notes' => 'required|string',
+            'checklists.*.notes' => 'nullable|string',
+            'checklists.*.additional_fix_action' => 'nullable|string',
+            'checklists.*.new_repair_status' => 'nullable|string',
+            'checklists.*.new_repair_cost_estimate' => 'nullable|numeric',
+            'checklists.*.new_repair_notes' => 'nullable|string',
         ];
     }
 }

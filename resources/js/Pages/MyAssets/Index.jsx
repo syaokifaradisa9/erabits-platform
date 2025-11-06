@@ -93,6 +93,25 @@ const FilterSection = ({ asset_types, filters }) => {
 
 // Kartu Aset
 const AssetCard = ({ inventory }) => {
+    // Hitung jumlah checklist rusak dan dalam perbaikan
+    const brokenCount = inventory.maintenances?.reduce((count, maint) => {
+        const checklists = maint.item_order_maintenance?.checklists || [];
+        const brokenItems = checklists.filter(cl => cl.condition === 'Rusak');
+        return count + brokenItems.length;
+    }, 0) || 0;
+    
+    const inProgressCount = inventory.maintenances?.reduce((count, maint) => {
+        const checklists = maint.item_order_maintenance?.checklists || [];
+        const inProgress = checklists.filter(cl => cl.repair_status === 'in_progress');
+        return count + inProgress.length;
+    }, 0) || 0;
+    
+    const pendingCount = inventory.maintenances?.reduce((count, maint) => {
+        const checklists = maint.item_order_maintenance?.checklists || [];
+        const pending = checklists.filter(cl => cl.repair_status === 'pending');
+        return count + pending.length;
+    }, 0) || 0;
+
     return (
         <div className="bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 flex flex-col">
             <Link href={`/my-assets/${inventory.id}`}>
@@ -112,9 +131,38 @@ const AssetCard = ({ inventory }) => {
                     <p className="mb-1 font-normal text-gray-700 dark:text-gray-400 text-sm">
                         <span className="font-semibold">Lokasi:</span> {inventory.location}
                     </p>
+                    {/* Menampilkan lokasi terakhir dari maintenance terbaru jika ada dan berbeda dari lokasi utama */}
+                    {inventory.latest_maintenance_location && inventory.latest_maintenance_location !== inventory.location && (
+                        <p className="mb-1 font-normal text-gray-700 dark:text-gray-400 text-sm">
+                            <span className="font-semibold">Lokasi:</span> {inventory.latest_maintenance_location}
+                        </p>
+                    )}
                     <p className="mb-1 font-normal text-gray-700 dark:text-gray-400 text-sm">
                         <span className="font-semibold">No. Seri:</span> {inventory.identify_number ?? '-'}
                     </p>
+                    
+                    {/* Indikator status pemeliharaan */}
+                    {(brokenCount > 0 || inProgressCount > 0 || pendingCount > 0) && (
+                        <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-wrap gap-2">
+                                {brokenCount > 0 && (
+                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-800/30 dark:text-red-300">
+                                        {brokenCount} Rusak
+                                    </span>
+                                )}
+                                {inProgressCount > 0 && (
+                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full dark:bg-yellow-800/30 dark:text-yellow-300">
+                                        {inProgressCount} Dalam Perbaikan
+                                    </span>
+                                )}
+                                {pendingCount > 0 && (
+                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-800/30 dark:text-blue-300">
+                                        {pendingCount} Menunggu Persetujuan
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <div className="mt-auto pt-4">
                      <Link 
@@ -137,27 +185,63 @@ export default function Index({ inventories, needs_repair_count, asset_types, fi
     return (
         <RootLayout title="Aset Saya">
             <ContentCard title="Daftar Aset Saya">
-                {/* Display repair count if there are items that need repair */}
-                {needs_repair_count > 0 && !filters.status && (
-                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-800">
-                        <div className="flex items-center">
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
-                                    {needs_repair_count} aset perlu perhatian
-                                </h3>
-                                <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                                    Gunakan filter status "Perlu Perbaikan" untuk melihatnya.
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => router.get("/my-assets", { status: 'needs_repair' }, { preserveState: true, replace: true })}
-                                className="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600"
-                            >
-                                Lihat Aset
-                            </button>
+                    {/* Ringkasan Status Aset */}
+                    <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Aset</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                {inventories.length}
+                            </p>
+                        </div>
+                        <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Memerlukan Perbaikan</p>
+                            <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                                {needs_repair_count}
+                            </p>
+                        </div>
+                        <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Menunggu Persetujuan</p>
+                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                {inventories.filter(inv => 
+                                    inv.maintenances?.some(maint => 
+                                        maint.item_order_maintenance?.checklists?.some(cl => cl.repair_status === 'pending')
+                                    )
+                                ).length}
+                            </p>
+                        </div>
+                        <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Dalam Perbaikan</p>
+                            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                                {inventories.filter(inv => 
+                                    inv.maintenances?.some(maint => 
+                                        maint.item_order_maintenance?.checklists?.some(cl => cl.repair_status === 'in_progress')
+                                    )
+                                ).length}
+                            </p>
                         </div>
                     </div>
-                )}
+                    
+                    {/* Display repair count if there are items that need repair */}
+                    {needs_repair_count > 0 && !filters.status && (
+                        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-800">
+                            <div className="flex items-center">
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                                        {needs_repair_count} aset perlu perhatian
+                                    </h3>
+                                    <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                                        Gunakan filter status "Perlu Perbaikan" untuk melihatnya.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => router.get("/my-assets", { status: 'needs_repair' }, { preserveState: true, replace: true })}
+                                    className="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600"
+                                >
+                                    Lihat Aset
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                 {/* Filter Section */}
                 <FilterSection asset_types={asset_types} filters={filters} />

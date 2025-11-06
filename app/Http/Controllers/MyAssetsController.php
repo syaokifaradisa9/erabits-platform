@@ -15,7 +15,7 @@ class MyAssetsController extends Controller
         $user = Auth::user();
         $filters = $request->only(['search', 'type', 'status']);
 
-        // Base query
+        // Base query - get ALL client inventories, not just those needing repair
         $query = ClientInventory::where('user_id', $user->id)->with('serviceItemType');
 
         // Apply search filter
@@ -48,20 +48,27 @@ class MyAssetsController extends Controller
             })
             ->pluck('id');
 
+
+
         // Apply status filter
         if ($request->filled('status')) {
             if ($request->input('status') === 'needs_repair') {
                 $query->whereIn('id', $inventoriesWithRepairIds);
             } elseif ($request->input('status') === 'normal') {
+                // Include only inventories that don't need repair 
                 $query->whereNotIn('id', $inventoriesWithRepairIds);
             }
         }
 
-        $inventories = $query->with('maintenances.itemOrderMaintenance')->latest('updated_at')->get();
+        $inventories = $query->with([
+            'maintenances.itemOrderMaintenance.checklists',
+            'maintenances.itemOrderMaintenance.checklists.repairHistories.user'
+        ])->latest('updated_at')->get();
 
         // Map data for frontend
         $inventoriesData = $inventories->map(function ($inventory) use ($inventoriesWithRepairIds) {
-            $status = $inventoriesWithRepairIds->contains($inventory->id) ? 'needs_repair' : 'normal';
+            $needsRepair = $inventoriesWithRepairIds->contains($inventory->id);
+            $status = $needsRepair ? 'needs_repair' : 'normal';
             
             // Ambil item_order_maintenance terbaru yang terkait dengan inventory ini berdasarkan kesamaan data dan memiliki asset_image_path
             $latestItemOrderMaintenance = \App\Models\ItemOrderMaintenance::whereNotNull('asset_image_path')
@@ -83,19 +90,9 @@ class MyAssetsController extends Controller
                 ->orderBy('id', 'DESC')  // Tambahkan urutan berdasarkan ID terakhir sebagai fallback
                 ->first();
                 
-            // Logging untuk debugging
-            \Log::info('MyAssetsController - Latest ItemOrderMaintenance Query', [
-                'inventory_id' => $inventory->id,
-                'inventory_name' => $inventory->name,
-                'inventory_identify_number' => $inventory->identify_number,
-                'found_maintenance_id' => $latestItemOrderMaintenance ? $latestItemOrderMaintenance->id : null,
-                'found_asset_image_path' => $latestItemOrderMaintenance ? $latestItemOrderMaintenance->asset_image_path : null,
-                'found_finish_date' => $latestItemOrderMaintenance ? $latestItemOrderMaintenance->finish_date : null,
-                'found_created_at' => $latestItemOrderMaintenance ? $latestItemOrderMaintenance->created_at : null,
-            ]);
-            
-            // Logging untuk melihat semua maintenance terkait
-            $allRelatedMaintenances = \App\Models\ItemOrderMaintenance::whereHas('itemOrder', function ($query) use ($inventory) {
+            // Ambil item_order_maintenance terbaru yang terkait dengan inventory ini berdasarkan kesamaan data dan memiliki asset_image_path
+            $latestItemOrderMaintenance = \App\Models\ItemOrderMaintenance::whereNotNull('asset_image_path')
+                ->whereHas('itemOrder', function ($query) use ($inventory) {
                     $query->where('name', $inventory->name)
                           ->where('merk', $inventory->merk)
                           ->where('model', $inventory->model)
@@ -107,26 +104,24 @@ class MyAssetsController extends Controller
                 ->whereHas('itemOrder.order', function ($query) use ($inventory) {
                     $query->where('client_id', $inventory->user_id);
                 })
+                ->with('itemOrder')
                 ->orderBy('finish_date', 'DESC')
                 ->orderBy('created_at', 'DESC')
-                ->get(['id', 'asset_image_path', 'finish_date', 'created_at']);
-                
-            \Log::info('MyAssetsController - All Related Maintenances', [
-                'inventory_id' => $inventory->id,
-                'inventory_name' => $inventory->name,
-                'maintenances' => $allRelatedMaintenances->map(function ($m) {
-                    return [
-                        'id' => $m->id,
-                        'asset_image_path' => $m->asset_image_path,
-                        'finish_date' => $m->finish_date,
-                        'created_at' => $m->created_at,
-                    ];
-                })->toArray()
-            ]);
+                ->orderBy('id', 'DESC')  // Tambahkan urutan berdasarkan ID terakhir sebagai fallback
+                ->first();
             
             $latestMaintenanceImagePath = $latestItemOrderMaintenance?->image_path;
             $latestAssetImagePath = $latestItemOrderMaintenance?->asset_image_path;
             
+            // Ambil maintenance terbaru untuk mendapatkan lokasi terbaru 
+            $latestMaintenanceForLocation = $inventory->maintenances
+                ->sortByDesc(function ($m) {
+                    return $m->itemOrderMaintenance ? $m->itemOrderMaintenance->created_at ?? $m->itemOrderMaintenance->updated_at : $m->created_at ?? now();
+                })
+                ->first();
+                
+            $latestLocation = $latestMaintenanceForLocation?->location;
+
             // Urutan prioritas: 
             // 1. customer_image_path (jika pelanggan upload)
             // 2. asset_image_path (foto alat dari teknisi)
@@ -148,6 +143,7 @@ class MyAssetsController extends Controller
                 'updated_at' => $inventory->updated_at,
                 'service_item_type' => $inventory->serviceItemType,
                 'status' => $status,
+                'latest_maintenance_location' => $latestLocation,
                 'image_url' => $imageUrl ?: ($inventory->image_url ?? 'https://placehold.co/600x400/e2e8f0/e2e8f0?text=+'),
             ];
         });
@@ -174,6 +170,8 @@ class MyAssetsController extends Controller
         if ($inventory->user_id !== Auth::id()) {
             abort(403);
         }
+
+
 
         // Load the full history
         $inventory->load([
@@ -267,6 +265,7 @@ class MyAssetsController extends Controller
                                             'notes' => $history->notes,
                                             'updated_by' => $history->user ? $history->user->name : 'Sistem',
                                             'updated_at' => $history->updated_at->format('Y-m-d H:i:s'),
+                                            'activity_type' => $history->activity_type,
                                         ];
                                     })->toArray(),
                                 ];
@@ -313,12 +312,34 @@ class MyAssetsController extends Controller
                 'repair_status' => 'in_progress',
             ]);
             
+            // Tambahkan entry ke repair history untuk approval
+            \App\Models\RepairHistory::create([
+                'item_order_checklist_id' => $checklist->id,
+                'old_status' => $checklist->getOriginal('repair_status') ?? $checklist->repair_status,
+                'new_status' => 'in_progress',
+                'notes' => "Perbaikan disetujui oleh klien",
+                'updated_by' => Auth::id(),
+                'updated_at' => now(),
+                'activity_type' => 'client_approval'
+            ]);
+            
             return response()->json([
                 'message' => 'Perbaikan disetujui dan sedang dalam proses.',
             ]);
         } elseif ($request->action === 'decline') {
             $checklist->update([
                 'repair_status' => 'declined',
+            ]);
+            
+            // Tambahkan entry ke repair history untuk decline
+            \App\Models\RepairHistory::create([
+                'item_order_checklist_id' => $checklist->id,
+                'old_status' => $checklist->getOriginal('repair_status') ?? $checklist->repair_status,
+                'new_status' => 'declined',
+                'notes' => "Perbaikan ditolak oleh klien",
+                'updated_by' => Auth::id(),
+                'updated_at' => now(),
+                'activity_type' => 'client_decline'
             ]);
             
             return response()->json([

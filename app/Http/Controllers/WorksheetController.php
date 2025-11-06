@@ -29,7 +29,7 @@ class WorksheetController extends Controller
 
     public function sheet(Order $order, ItemOrderMaintenance $maintenance)
     {
-        $maintenance->load('itemOrder.item.checklists', 'checklists', 'clientInventoryMaintenance.clientInventory');
+        $maintenance->load('itemOrder.item.checklists', 'checklists.repairHistories.user', 'clientInventoryMaintenance.clientInventory');
         $conditions = [
             ChecklistCondition::Good,
             ChecklistCondition::Broken
