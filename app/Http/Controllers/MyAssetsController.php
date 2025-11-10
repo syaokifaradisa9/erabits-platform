@@ -166,6 +166,31 @@ class MyAssetsController extends Controller
                 $query->with(['checklists.repairHistories.user', 'itemOrder.order']);
             },
         ]);
+        
+        // Load the full history, including the order information
+        $inventory->load([
+            'maintenances.itemOrderMaintenance' => function ($query) {
+                $query->with(['checklists.repairHistories.user', 'itemOrder.order']);
+            },
+        ]);
+        
+        // Get the latest order number by finding the most recent order associated with this inventory
+        $latestOrderNumber = null;
+        $latestOrderDate = null;
+        
+        foreach ($inventory->maintenances as $maintenance) {
+            if ($maintenance->itemOrderMaintenance && $maintenance->itemOrderMaintenance->itemOrder && $maintenance->itemOrderMaintenance->itemOrder->order) {
+                $order = $maintenance->itemOrderMaintenance->itemOrder->order;
+                // Check various possible date fields to determine the most recent order
+                $date = $order->confirmation_date ?? $order->order_date ?? $order->created_at ?? $order->updated_at;
+                $timestamp = is_string($date) ? strtotime($date) : $date->timestamp;
+                
+                if ($timestamp && (!$latestOrderDate || $timestamp > $latestOrderDate)) {
+                    $latestOrderDate = $timestamp;
+                    $latestOrderNumber = $order->number;
+                }
+            }
+        }
 
         $latestMaintenanceLocation = \App\Models\ClientInventoryMaintenance::where('client_inventory_id', $inventory->id)
             ->leftJoin('item_order_maintenances', 'client_inventory_maintenances.item_order_maintenance_id', '=', 'item_order_maintenances.id')
@@ -196,11 +221,23 @@ class MyAssetsController extends Controller
                 return -1;
             }
             $firstMaintenance = $maintenances->first();
-            return $firstMaintenance->itemOrderMaintenance->itemOrder->order->confirmation_date;
+            $order = $firstMaintenance->itemOrderMaintenance->itemOrder->order;
+            
+            // Check various possible date fields and convert to timestamp
+            $dateFields = [$order->confirmation_date, $order->order_date, $order->created_at, $order->updated_at];
+            
+            foreach ($dateFields as $date) {
+                if ($date) {
+                    $timestamp = is_string($date) ? strtotime($date) : $date->timestamp;
+                    if ($timestamp !== false) {
+                        return $timestamp;
+                    }
+                }
+            }
+            
+            // If no valid date found, use a very old timestamp so it appears last
+            return 0;
         });
-
-        // Get the latest order number
-        $latestOrderNumber = $sortedMaintenancesByOrder->keys()->first();
 
         // Filter checklists based on the request parameter
         $filter = $request->query('filter');
@@ -241,6 +278,105 @@ class MyAssetsController extends Controller
             return $maintenances->count() > 0; // Filter out orders with no maintenances after filtering
         });
 
+        // Determine the latest order from the filtered results - prioritize by numeric order number as primary method
+        if ($filteredMaintenancesByOrder->isNotEmpty()) {
+            // Find the order with the highest numeric value among filtered results
+            $highestNumericOrder = PHP_INT_MIN;
+            $latestOrderNumber = null;
+            
+            foreach ($filteredMaintenancesByOrder as $orderNumber => $maintenances) {
+                if ($orderNumber === 'Uncategorized') {
+                    continue;
+                }
+                
+                // Convert order number to numeric value for comparison
+                $numericValue = is_numeric($orderNumber) ? (int)$orderNumber : 0;
+                
+                // Update if this order has a higher numeric value
+                if ($numericValue > $highestNumericOrder) {
+                    $highestNumericOrder = $numericValue;
+                    $latestOrderNumber = $orderNumber;
+                }
+            }
+            
+            // Only if we couldn't determine from numeric comparison, fall back to date-based approach
+            if ($latestOrderNumber === null) {
+                $latestOrderTimestamp = null;
+                
+                foreach ($filteredMaintenancesByOrder as $orderNumber => $maintenances) {
+                    if ($orderNumber === 'Uncategorized') {
+                        continue;
+                    }
+                    
+                    // Get the first maintenance in this order group to access the order information
+                    $firstMaintenance = $maintenances->first();
+                    if ($firstMaintenance && $firstMaintenance->itemOrderMaintenance && 
+                        $firstMaintenance->itemOrderMaintenance->itemOrder && 
+                        $firstMaintenance->itemOrderMaintenance->itemOrder->order) {
+                        
+                        $order = $firstMaintenance->itemOrderMaintenance->itemOrder->order;
+                        // Check various possible date fields and convert to timestamp
+                        $dateFields = [$order->confirmation_date, $order->order_date, $order->created_at, $order->updated_at];
+
+                        foreach ($dateFields as $date) {
+                            if ($date) {
+                                $timestamp = is_string($date) ? strtotime($date) : $date->timestamp;
+                                if ($timestamp !== false) {
+                                    if ($latestOrderTimestamp === null || $timestamp > $latestOrderTimestamp) {
+                                        $latestOrderTimestamp = $timestamp;
+                                        $latestOrderNumber = $orderNumber;
+                                    }
+                                    break; // Use the first valid date found
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Only if we still couldn't determine, fall back to keys()->first()
+            if ($latestOrderNumber === null) {
+                $latestOrderNumber = $filteredMaintenancesByOrder->keys()->first();
+            }
+            
+            // Re-sort the filteredMaintenancesByOrder to ensure the latest order is first for display purposes
+            // Prioritize by numeric order number first, then by date as secondary
+            $reSortedFilteredOrders = $filteredMaintenancesByOrder->sortByDesc(function ($maintenances, $orderNumber) {
+                if ($orderNumber === 'Uncategorized') {
+                    return -1;
+                }
+                
+                // Prioritize by numeric value first
+                $numericOrder = is_numeric($orderNumber) ? (int)$orderNumber : 0;
+                
+                $firstMaintenance = $maintenances->first();
+                if ($firstMaintenance && $firstMaintenance->itemOrderMaintenance && 
+                    $firstMaintenance->itemOrderMaintenance->itemOrder && 
+                    $firstMaintenance->itemOrderMaintenance->itemOrder->order) {
+                    
+                    $order = $firstMaintenance->itemOrderMaintenance->itemOrder->order;
+                    $dateFields = [$order->confirmation_date, $order->order_date, $order->created_at, $order->updated_at];
+
+                    foreach ($dateFields as $date) {
+                        if ($date) {
+                            $timestamp = is_string($date) ? strtotime($date) : $date->timestamp;
+                            if ($timestamp !== false) {
+                                // Combine numeric value and timestamp for comparison
+                                // Using a large multiplier to ensure numeric order takes priority
+                                return ($numericOrder * 1000000) + $timestamp;
+                            }
+                        }
+                    }
+                }
+                
+                // If no valid date found, use numeric value only (multiplied for priority)
+                return $numericOrder * 1000000;
+            });
+            
+            // Update the filteredMaintenancesByOrder to use the re-sorted version
+            $filteredMaintenancesByOrder = $reSortedFilteredOrders;
+        }
+
         return Inertia::render('MyAssets/Show', [
             'inventory' => [
                 'id' => $inventory->id,
@@ -254,8 +390,23 @@ class MyAssetsController extends Controller
                     'name' => $inventory->serviceItemType->name,
                 ],
                 'maintenances_by_order' => $filteredMaintenancesByOrder->map(function ($maintenances, $orderNumber) {
+                    // Get the order information from the first maintenance in this group to extract date info
+                    $firstMaintenance = $maintenances->first();
+                    $orderInfo = null;
+                    if ($firstMaintenance->itemOrderMaintenance && $firstMaintenance->itemOrderMaintenance->itemOrder && $firstMaintenance->itemOrderMaintenance->itemOrder->order) {
+                        $order = $firstMaintenance->itemOrderMaintenance->itemOrder->order;
+                        $orderInfo = [
+                            'number' => $order->number,
+                            'confirmation_date' => $order->confirmation_date,
+                            'order_date' => $order->order_date,
+                            'created_at' => $order->created_at,
+                            'updated_at' => $order->updated_at
+                        ];
+                    }
+                    
                     return [
                         'order_number' => $orderNumber,
+                        'order_date_info' => $orderInfo, // Add the order date information
                         'maintenances' => $maintenances->map(function ($maintenance) {
                             $itemOrderMaintenance = $maintenance->itemOrderMaintenance;
                             return [

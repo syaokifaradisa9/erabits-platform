@@ -245,13 +245,37 @@ export default function Show({ inventory, latest_order_number, filter }) {
                     <div className="space-y-4">
                         {inventory.maintenances_by_order.length > 0 ? (
                             inventory.maintenances_by_order.map(orderGroup => (
-                                <div key={orderGroup.order_number} className="border border-gray-200 dark:border-gray-700 rounded-lg">
+                                <div key={orderGroup.order_number} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
                                     <button
                                         onClick={() => toggleOrder(orderGroup.order_number)}
-                                        className="w-full flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                        className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-gray-600 dark:hover:to-gray-700 transition-all duration-200"
                                     >
-                                        <span className="font-semibold text-lg">Order: {orderGroup.order_number}</span>
-                                        <ChevronDown className={`transform transition-transform ${openOrder === orderGroup.order_number ? 'rotate-180' : ''}`} />
+                                        <div className="text-left">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-semibold text-lg text-gray-800 dark:text-white">Order: {orderGroup.order_number}</span>
+                                                {orderGroup.order_number && latest_order_number && String(orderGroup.order_number) === String(latest_order_number) && (
+                                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-500 text-white rounded-full dark:bg-blue-600">
+                                                        Terbaru
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {orderGroup.order_date_info && (
+                                                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                                        {orderGroup.order_date_info.confirmation_date 
+                                                            ? `📅 ${new Date(orderGroup.order_date_info.confirmation_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}`
+                                                            : orderGroup.order_date_info.order_date
+                                                                ? `📅 ${new Date(orderGroup.order_date_info.order_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}`
+                                                                : orderGroup.order_date_info.created_at
+                                                                    ? `📅 ${new Date(orderGroup.order_date_info.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}`
+                                                                    : '📅 Tanggal tidak tersedia'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="mt-2 sm:mt-0 flex items-center">
+                                            <ChevronDown className={`transform transition-transform ${openOrder === orderGroup.order_number ? 'rotate-180 text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                                        </div>
                                     </button>
                                     {openOrder === orderGroup.order_number && (
                                         <div className="p-4 space-y-8">
@@ -264,14 +288,33 @@ export default function Show({ inventory, latest_order_number, filter }) {
 
                                                 return (
                                                     <div key={maintenance.id} className="relative">
-                                                        <div className="ml-12 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-                                                            <time className="mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">
-                                                                {new Date(maintenance.item_order_maintenance.finish_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                                            </time>
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <h4 className={`text-lg font-semibold ${needsRepair ? 'text-red-600' : hasBrokenItems ? 'text-orange-600' : 'text-green-600'}`}>
-                                                                    Status: {needsRepair ? 'Perlu Perbaikan' : hasBrokenItems ? 'Ditemukan Kerusakan' : 'Kondisi Baik'}
-                                                                </h4>
+                                                        <div className="p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                                                            <div className="flex flex-wrap justify-between items-start gap-3 mb-3">
+                                                                <div>
+                                                                    <time className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                                        Tanggal Selesai: {new Date(maintenance.item_order_maintenance.finish_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                                    </time>
+                                                                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                                        <h4 className={`text-lg font-semibold ${needsRepair ? 'text-red-600' : hasBrokenItems ? 'text-orange-600' : 'text-green-600'}`}>
+                                                                            Status: {needsRepair ? 'Perlu Perbaikan' : hasBrokenItems ? 'Ditemukan Kerusakan' : 'Kondisi Baik'}
+                                                                        </h4>
+                                                                        {typeof totalChecklists !== 'undefined' && totalChecklists > 0 && (
+                                                                            <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                                                                {typeof completedChecklists !== 'undefined' ? completedChecklists : 0}/{totalChecklists} selesai
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex gap-2">
+                                                                    {/* Status badge */}
+                                                                    <span className={`px-2 py-1 text-xs rounded-full ${
+                                                                        needsRepair ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 
+                                                                        hasBrokenItems ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' : 
+                                                                        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                                    }`}>
+                                                                        {needsRepair ? 'Perlu Perbaikan' : hasBrokenItems ? 'Kerusakan' : 'Baik'}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                             
                                                             {/* Bukti pemeliharaan jika tersedia */}
