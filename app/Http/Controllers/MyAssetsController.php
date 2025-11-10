@@ -160,10 +160,10 @@ class MyAssetsController extends Controller
 
 
 
-        // Load the full history
+        // Load the full history, including the order information
         $inventory->load([
             'maintenances.itemOrderMaintenance' => function ($query) {
-                $query->with(['checklists.repairHistories.user', 'itemOrder']);
+                $query->with(['checklists.repairHistories.user', 'itemOrder.order']);
             },
         ]);
 
@@ -181,45 +181,64 @@ class MyAssetsController extends Controller
             ->limit(1)
             ->value('location');
 
-        // Urutkan maintenances berdasarkan created_at terbaru dari itemOrderMaintenance
-        $inventory->maintenances = $inventory->maintenances->sortByDesc(function ($m) {
-            return $m->itemOrderMaintenance ? $m->itemOrderMaintenance->created_at : $m->created_at;
+        // Group maintenances by order
+        $maintenancesByOrder = $inventory->maintenances->mapToGroups(function ($maintenance) {
+            if ($maintenance->itemOrderMaintenance && $maintenance->itemOrderMaintenance->itemOrder && $maintenance->itemOrderMaintenance->itemOrder->order) {
+                $order = $maintenance->itemOrderMaintenance->itemOrder->order;
+                return [$order->number => $maintenance];
+            }
+            return ['Uncategorized' => $maintenance];
         });
 
-        // Filter checklists berdasarkan parameter
+        // Sort orders by confirmation date descending
+        $sortedMaintenancesByOrder = $maintenancesByOrder->sortByDesc(function ($maintenances, $orderNumber) {
+            if ($orderNumber === 'Uncategorized') {
+                return -1;
+            }
+            $firstMaintenance = $maintenances->first();
+            return $firstMaintenance->itemOrderMaintenance->itemOrder->order->confirmation_date;
+        });
+
+        // Get the latest order number
+        $latestOrderNumber = $sortedMaintenancesByOrder->keys()->first();
+
+        // Filter checklists based on the request parameter
         $filter = $request->query('filter');
         
-        $inventory->maintenances = $inventory->maintenances->map(function ($maintenance) use ($filter) {
-            if ($maintenance->itemOrderMaintenance) {
-                $filteredChecklists = $maintenance->itemOrderMaintenance->checklists;
-                
-                if ($filter === 'needs_repair') {
-                    $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
-                        return $checklist->condition === 'rusak' || in_array($checklist->repair_status, ['pending', 'in_progress', null]);
-                    });
-                } elseif ($filter === 'broken_only') {
-                    $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
-                        return $checklist->condition === 'rusak';
-                    });
-                } elseif ($filter === 'in_repair') {
-                    $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
-                        return in_array($checklist->repair_status, ['pending', 'in_progress']);
-                    });
-                } elseif ($filter === 'completed') {
-                    $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
-                        return $checklist->repair_status === 'completed';
-                    });
+        $filteredMaintenancesByOrder = $sortedMaintenancesByOrder->map(function ($maintenances) use ($filter) {
+            return $maintenances->map(function ($maintenance) use ($filter) {
+                if ($maintenance->itemOrderMaintenance) {
+                    $filteredChecklists = $maintenance->itemOrderMaintenance->checklists;
+                    
+                    if ($filter === 'needs_repair') {
+                        $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
+                            return $checklist->condition === 'rusak' || in_array($checklist->repair_status, ['pending', 'in_progress', null]);
+                        });
+                    } elseif ($filter === 'broken_only') {
+                        $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
+                            return $checklist->condition === 'rusak';
+                        });
+                    } elseif ($filter === 'in_repair') {
+                        $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
+                            return in_array($checklist->repair_status, ['pending', 'in_progress']);
+                        });
+                    } elseif ($filter === 'completed') {
+                        $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
+                            return $checklist->repair_status === 'completed';
+                        });
+                    }
+                    
+                    $maintenance->itemOrderMaintenance->checklists = $filteredChecklists;
                 }
-                
-                $maintenance->itemOrderMaintenance->checklists = $filteredChecklists;
-            }
-            return $maintenance;
-        })->filter(function ($maintenance) {
-            // Filter out maintenances that have no checklists after filtering
-            if ($maintenance->itemOrderMaintenance) {
-                return $maintenance->itemOrderMaintenance->checklists->count() > 0;
-            }
-            return true;
+                return $maintenance;
+            })->filter(function ($maintenance) {
+                if ($maintenance->itemOrderMaintenance) {
+                    return $maintenance->itemOrderMaintenance->checklists->count() > 0;
+                }
+                return true; // Keep maintenances without itemOrderMaintenance
+            });
+        })->filter(function ($maintenances) {
+            return $maintenances->count() > 0; // Filter out orders with no maintenances after filtering
         });
 
         return Inertia::render('MyAssets/Show', [
@@ -234,52 +253,57 @@ class MyAssetsController extends Controller
                 'service_item_type' => [
                     'name' => $inventory->serviceItemType->name,
                 ],
-                'maintenances' => $inventory->maintenances->map(function ($maintenance) {
-                    $itemOrderMaintenance = $maintenance->itemOrderMaintenance;
-                    
+                'maintenances_by_order' => $filteredMaintenancesByOrder->map(function ($maintenances, $orderNumber) {
                     return [
-                        'id' => $maintenance->id,
-                        'location' => $maintenance->location,
-                        'item_order_maintenance' => $itemOrderMaintenance ? [
-                            'id' => $itemOrderMaintenance->id,
-                            'finish_date' => $itemOrderMaintenance->finish_date,
-                            'image_path' => $itemOrderMaintenance->image_path,
-                            'asset_image_path' => $itemOrderMaintenance->asset_image_path,
-                            'created_at' => $itemOrderMaintenance->created_at ? $itemOrderMaintenance->created_at->toISOString() : null,
-                            'checklists' => $itemOrderMaintenance->checklists->map(function ($checklist) {
-                                return [
-                                    'id' => $checklist->id,
-                                    'name' => $checklist->name,
-                                    'description' => $checklist->description,
-                                    'condition' => $checklist->condition,
-                                    'fix_action' => $checklist->fix_action,
-                                    'notes' => $checklist->notes,
-                                    'repair_status' => $checklist->repair_status,
-                                    'repair_cost_estimate' => $checklist->repair_cost_estimate,
-                                    'repair_notes' => $checklist->repair_notes,
-                                    'repair_started_at' => $checklist->repair_started_at,
-                                    'repair_completed_at' => $checklist->repair_completed_at,
-                                    'repair_histories' => $checklist->repairHistories()->with('user')->get()->map(function ($history) {
+                        'order_number' => $orderNumber,
+                        'maintenances' => $maintenances->map(function ($maintenance) {
+                            $itemOrderMaintenance = $maintenance->itemOrderMaintenance;
+                            return [
+                                'id' => $maintenance->id,
+                                'location' => $maintenance->location,
+                                'item_order_maintenance' => $itemOrderMaintenance ? [
+                                    'id' => $itemOrderMaintenance->id,
+                                    'finish_date' => $itemOrderMaintenance->finish_date,
+                                    'image_path' => $itemOrderMaintenance->image_path,
+                                    'asset_image_path' => $itemOrderMaintenance->asset_image_path,
+                                    'created_at' => $itemOrderMaintenance->created_at ? $itemOrderMaintenance->created_at->toISOString() : null,
+                                    'checklists' => $itemOrderMaintenance->checklists->map(function ($checklist) {
                                         return [
-                                            'id' => $history->id,
-                                            'old_status' => $history->old_status,
-                                            'new_status' => $history->new_status,
-                                            'notes' => $history->notes,
-                                            'updated_by' => $history->user ? $history->user->name : 'Sistem',
-                                            'updated_at' => $history->updated_at->format('Y-m-d H:i:s'),
-                                            'activity_type' => $history->activity_type,
+                                            'id' => $checklist->id,
+                                            'name' => $checklist->name,
+                                            'description' => $checklist->description,
+                                            'condition' => $checklist->condition,
+                                            'fix_action' => $checklist->fix_action,
+                                            'notes' => $checklist->notes,
+                                            'repair_status' => $checklist->repair_status,
+                                            'repair_cost_estimate' => $checklist->repair_cost_estimate,
+                                            'repair_notes' => $checklist->repair_notes,
+                                            'repair_started_at' => $checklist->repair_started_at,
+                                            'repair_completed_at' => $checklist->repair_completed_at,
+                                            'repair_histories' => $checklist->repairHistories()->with('user')->get()->map(function ($history) {
+                                                return [
+                                                    'id' => $history->id,
+                                                    'old_status' => $history->old_status,
+                                                    'new_status' => $history->new_status,
+                                                    'notes' => $history->notes,
+                                                    'updated_by' => $history->user ? $history->user->name : 'Sistem',
+                                                    'updated_at' => $history->updated_at->format('Y-m-d H:i:s'),
+                                                    'activity_type' => $history->activity_type,
+                                                ];
+                                            })->toArray(),
                                         ];
-                                    })->toArray(),
-                                ];
-                            })->toArray(),
-                            'item_order' => $itemOrderMaintenance->itemOrder ? [
-                                'id' => $itemOrderMaintenance->itemOrder->id,
-                                'name' => $itemOrderMaintenance->itemOrder->name,
-                            ] : null,
-                        ] : null,
+                                    })->values(),
+                                    'item_order' => $itemOrderMaintenance->itemOrder ? [
+                                        'id' => $itemOrderMaintenance->itemOrder->id,
+                                        'name' => $itemOrderMaintenance->itemOrder->name,
+                                    ] : null,
+                                ] : null,
+                            ];
+                        })->values(),
                     ];
-                })->toArray(),
+                })->values(),
             ],
+            'latest_order_number' => $latestOrderNumber,
             'filter' => $filter,
         ]);
     }
