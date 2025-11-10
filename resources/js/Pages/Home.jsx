@@ -60,9 +60,9 @@ function ItemCard({ item, onAddToCart, isMobile = false }) {
                 )}
             </div>
             <div className={isMobile ? "p-3" : "p-4"}>
-                <h4 className={`font-bold ${isMobile ? 'text-lg' : 'text-lg'} mb-${isMobile ? '1' : '2'} text-gray-800 truncate`} title={item.name}>{item.name}</h4>
-                <p className={`text-blue-600 font-semibold mb-${isMobile ? '2' : '3'}`}>Rp {item.price?.toLocaleString()}</p>
-                <p className={`text-gray-600 text-sm mb-${isMobile ? '3' : '4'}`}>Pemeliharaan: {item.maintenance_count} kali</p>
+                <h4 className={`font-bold ${isMobile ? 'text-lg' : 'text-lg'} mb-${isMobile ? '1' : '1'} text-gray-800 truncate`} title={item.name}>{item.name}</h4>
+                <p className={`text-blue-600 font-semibold mb-${isMobile ? '2' : '2'}`}>Rp {item.price?.toLocaleString()}</p>
+                <p className={`text-gray-600 text-sm mb-${isMobile ? '3' : '3'}`}>Pemeliharaan: {item.maintenance_count} kali</p>
                 <button 
                     onClick={() => onAddToCart(item)}
                     className={`w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition duration-300 ${isMobile ? 'text-sm' : ''}`}
@@ -83,6 +83,19 @@ export default function Home({ serviceCategories, auth }) {
         }
         return [];
     });
+    
+    // State untuk form permintaan layanan
+    const [serviceRequest, setServiceRequest] = useState({
+        name: '',
+        contact: '',
+        service_type: '',
+        description: ''
+    });
+    
+    // State untuk status form
+    const [requestLoading, setRequestLoading] = useState(false);
+    const [requestSuccess, setRequestSuccess] = useState(false);
+    const [requestError, setRequestError] = useState('');
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -220,6 +233,60 @@ export default function Home({ serviceCategories, auth }) {
             console.error('Error creating order:', error);
             alert('Terjadi kesalahan saat membuat pesanan: ' + error.message);
         });
+    };
+
+    // Fungsi untuk mengirim permintaan layanan
+    const handleSubmitServiceRequest = async () => {
+        // Validasi data
+        if (!serviceRequest.name || !serviceRequest.contact || !serviceRequest.service_type || !serviceRequest.description) {
+            setRequestError('Mohon lengkapi semua data');
+            return;
+        }
+        
+        setRequestLoading(true);
+        setRequestError('');
+        
+        try {
+            const response = await fetch('/api/service-requests', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify(serviceRequest)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                setRequestSuccess(true);
+                // Reset form
+                setServiceRequest({
+                    name: '',
+                    contact: '',
+                    service_type: '',
+                    description: ''
+                });
+            } else {
+                setRequestError(result.message || 'Terjadi kesalahan saat mengirim permintaan');
+            }
+        } catch (error) {
+            setRequestError('Koneksi error. Silakan coba lagi nanti');
+        } finally {
+            setRequestLoading(false);
+            // Reset success message after 5 seconds
+            setTimeout(() => {
+                setRequestSuccess(false);
+            }, 5000);
+        }
+    };
+    
+    // Fungsi untuk scroll ke formulir permintaan layanan
+    const scrollToServiceRequest = () => {
+        const serviceRequestElement = document.querySelector('.bg-gradient-to-r.from-blue-500.to-blue-700');
+        if (serviceRequestElement) {
+            serviceRequestElement.scrollIntoView({ behavior: 'smooth' });
+        }
     };
 
     // Fungsi untuk mengosongkan keranjang
@@ -407,25 +474,36 @@ export default function Home({ serviceCategories, auth }) {
                 onAddToCart={addToCart}
             />
 
+            {/* Service Request Section - Before Hero */}
+
+
             {/* Hero Section */}
-            <section className="py-16 md:py-24">
+            <section className="py-8 md:py-12">
                 <div className="container mx-auto px-4 text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
+                    <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-4">
                         Solusi Lengkap untuk Kebutuhan Fasyankes
                     </h1>
-                    <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12">
-                        Platform terpadu untuk kebutuhan alat kesehatan dan sarana prasarana fasilitas kesehatan
+                    <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
+                        Platform terpadu untuk kebutuhan Pemeliharaan alat kesehatan dan sarana prasarana fasilitas kesehatan
                     </p>
+                    <div className="mt-4">
+                        <button 
+                            onClick={scrollToServiceRequest}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition duration-300 inline-block shadow-md"
+                        >
+                            Butuh Bantuan atau Perbaikan?
+                        </button>
+                    </div>
                 </div>
             </section>
 
             {/* Main Content with Sidebar */}
-            <div className="container mx-auto px-4 py-12">
+            <div className="container mx-auto px-4 py-6">
                 <div className="flex flex-col md:flex-row gap-8">
 
                     {/* Filters Sidebar */}
                     <aside className="w-full md:w-1/4 lg:w-1/5">
-                        <div className="bg-white p-6 rounded-lg shadow-lg sticky top-8">
+                        <div className="bg-white p-6 rounded-lg shadow-lg sticky top-16">
                             <h3 className="text-xl font-bold mb-6 border-b pb-3">Filter & Cari</h3>
                             <div className="flex flex-col gap-6">
                                 <div>
@@ -540,6 +618,108 @@ export default function Home({ serviceCategories, auth }) {
                     </main>
                 </div>
             </div>
+
+            {/* Service Request Section - Below Items Content */}
+            <section className="py-8 bg-gradient-to-r from-blue-500 to-blue-700 text-white">
+                <div className="container mx-auto px-4">
+                    <div className="max-w-6xl mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 md:p-8">
+                        <div className="text-center mb-8">
+                            <h2 className="text-2xl md:text-3xl font-bold mb-2">Butuh Bantuan atau Perbaikan?</h2>
+                            <p className="text-blue-100">Kirimkan permintaan layanan Anda, kami akan segera menanganinya</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-2 text-blue-100">Nama Lengkap</label>
+                                <input
+                                    type="text"
+                                    placeholder="Nama Anda"
+                                    value={serviceRequest.name}
+                                    onChange={(e) => setServiceRequest({...serviceRequest, name: e.target.value})}
+                                    className="w-full px-4 py-3 rounded-lg bg-white/90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 border border-blue-200/50"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium mb-2 text-blue-100">Email atau Telepon</label>
+                                <input
+                                    type="text"
+                                    placeholder="Kontak Anda"
+                                    value={serviceRequest.contact}
+                                    onChange={(e) => setServiceRequest({...serviceRequest, contact: e.target.value})}
+                                    className="w-full px-4 py-3 rounded-lg bg-white/90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 border border-blue-200/50"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium mb-2 text-blue-100">Jenis Layanan</label>
+                                <select 
+                                    value={serviceRequest.service_type}
+                                    onChange={(e) => setServiceRequest({...serviceRequest, service_type: e.target.value})}
+                                    className="w-full px-4 py-3 rounded-lg bg-white/90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 border border-blue-200/50">
+                                    <option value="">Pilih Jenis Layanan</option>
+                                    <option value="perbaikan">Perbaikan Alat</option>
+                                    <option value="konsultasi">Konsultasi Teknis</option>
+                                    <option value="instalasi">Instalasi Baru</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium mb-2 text-blue-100">Deskripsi Masalah</label>
+                            <textarea
+                                placeholder="Jelaskan masalah yang Anda alami atau layanan yang Anda butuhkan..."
+                                rows="3"
+                                value={serviceRequest.description}
+                                onChange={(e) => setServiceRequest({...serviceRequest, description: e.target.value})}
+                                className="w-full px-4 py-3 rounded-lg bg-white/90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 border border-blue-200/50"
+                            ></textarea>
+                        </div>
+                        
+                        <div className="mb-4">
+                            {requestError && (
+                                <div className="text-red-300 bg-red-900/30 p-3 rounded-lg text-center mb-3">
+                                    {requestError}
+                                </div>
+                            )}
+                            {requestSuccess && (
+                                <div className="text-green-300 bg-green-900/30 p-3 rounded-lg text-center mb-3">
+                                    Permintaan layanan Anda telah terkirim! Kami akan segera menghubungi Anda.
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="text-center">
+                            <button 
+                                onClick={handleSubmitServiceRequest}
+                                disabled={requestLoading}
+                                className="bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-gray-100 transition duration-300 inline-block disabled:opacity-50 shadow-md"
+                            >
+                                {requestLoading ? (
+                                    <span className="flex items-center justify-center">
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Mengirim...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                                        </svg>
+                                        Kirim Permintaan Layanan
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                        
+                        <div className="mt-4 text-center text-sm text-blue-100/80">
+                            <p>Tim teknisi kami akan segera menghubungi Anda setelah permintaan dikirim</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             {/* Features Section */}
             <section className="py-16 bg-gray-50">

@@ -71,6 +71,12 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                                     icon={Briefcase}
                                     roles={["Superadmin", "Admin", "Manager", "Officer"]}
                                 />
+                                <SidebarLink
+                                    name="Permintaan Layanan"
+                                    href="/service-requests"
+                                    icon={Briefcase}
+                                    roles={["Superadmin", "Admin", "Manager", "Officer"]}
+                                />
                             </div>
                             <div className="px-3 mt-2">
                                 <div className="py-2">

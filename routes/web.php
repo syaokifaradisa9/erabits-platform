@@ -23,9 +23,10 @@ Route::prefix('api')->group(function () {
     Route::get('/user', [OrderApiController::class, 'checkUserStatus']);
     Route::middleware('auth')->group(function () {
         Route::post('/orders', [OrderApiController::class, 'store']);
-        
-        
     });
+    
+    // Route untuk permintaan layanan tanpa login
+    Route::post('/service-requests', [App\Http\Controllers\Api\ServiceRequestController::class, 'store']);
 });
 
 Route::prefix("auth")->name("auth.")->controller(AuthController::class)->group(function () {
@@ -135,5 +136,10 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix("repair-dashboard")->name("repair-dashboard.")->controller(\App\Http\Controllers\RepairDashboardController::class)->group(function () {
         Route::get("/", "index")->name("index");
+    });
+    
+    Route::prefix("service-requests")->name("service-requests.")->controller(\App\Http\Controllers\ServiceRequestController::class)->group(function () {
+        Route::get("/", "index")->name("index");
+        Route::put("/{serviceRequest}/status", "updateStatus")->name("update-status");
     });
 });
