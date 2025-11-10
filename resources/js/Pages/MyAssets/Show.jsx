@@ -24,6 +24,27 @@ export default function Show({ inventory, latest_order_number, filter }) {
         return <CheckCircle className="text-green-500" />;
     };
 
+    const getOrderStatusBadge = (status) => {
+        if (!status) return null;
+        
+        const statusConfig = {
+            'Pending': { text: 'Pending', color: 'bg-yellow-500' },
+            'Ditolak': { text: 'Ditolak', color: 'bg-red-500' },
+            'Terkonfirmasi': { text: 'Terkonfirmasi', color: 'bg-blue-500' },
+            'Dikerjakan': { text: 'Dikerjakan', color: 'bg-orange-500' },
+            'Selesai': { text: 'Selesai', color: 'bg-green-500' },
+        };
+        
+        const config = statusConfig[status];
+        if (!config) return null;
+        
+        return (
+            <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${config.color} text-white rounded-full dark:${config.color.replace('500', '600')}`}>
+                {config.text}
+            </span>
+        );
+    };
+
     const handleApprove = (checklistId) => {
         toast(
             (t) => (
@@ -146,6 +167,7 @@ export default function Show({ inventory, latest_order_number, filter }) {
             case 'broken_only': return 'Hanya Rusak';
             case 'in_repair': return 'Dalam Perbaikan';
             case 'completed': return 'Selesai';
+            case 'in_progress': return 'Dikerjakan';
             default: return 'Semua Riwayat';
         }
     };
@@ -229,6 +251,13 @@ export default function Show({ inventory, latest_order_number, filter }) {
                         >
                             Selesai
                         </Link>
+                        <Link 
+                            href={`/my-assets/${inventory.id}?filter=in_progress`}
+                            className={`px-3 py-1 rounded-md text-sm ${filter === 'in_progress' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200'}`}
+                        >
+                            Dikerjakan
+                        </Link>
+
                     </div>
                     {filter && (
                         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -251,13 +280,14 @@ export default function Show({ inventory, latest_order_number, filter }) {
                                         className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-gray-600 dark:hover:to-gray-700 transition-all duration-200"
                                     >
                                         <div className="text-left">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 flex-wrap">
                                                 <span className="font-semibold text-lg text-gray-800 dark:text-white">Order: {orderGroup.order_number}</span>
                                                 {orderGroup.order_number && latest_order_number && String(orderGroup.order_number) === String(latest_order_number) && (
                                                     <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-500 text-white rounded-full dark:bg-blue-600">
                                                         Terbaru
                                                     </span>
                                                 )}
+                                                {orderGroup.order_status && getOrderStatusBadge(orderGroup.order_status)}
                                             </div>
                                             {orderGroup.order_date_info && (
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">

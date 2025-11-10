@@ -239,44 +239,66 @@ class MyAssetsController extends Controller
             return 0;
         });
 
-        // Filter checklists based on the request parameter
+        // Filter based on the request parameter
         $filter = $request->query('filter');
         
-        $filteredMaintenancesByOrder = $sortedMaintenancesByOrder->map(function ($maintenances) use ($filter) {
-            return $maintenances->map(function ($maintenance) use ($filter) {
-                if ($maintenance->itemOrderMaintenance) {
-                    $filteredChecklists = $maintenance->itemOrderMaintenance->checklists;
-                    
-                    if ($filter === 'needs_repair') {
-                        $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
-                            return $checklist->condition === 'rusak' || in_array($checklist->repair_status, ['pending', 'in_progress', null]);
-                        });
-                    } elseif ($filter === 'broken_only') {
-                        $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
-                            return $checklist->condition === 'rusak';
-                        });
-                    } elseif ($filter === 'in_repair') {
-                        $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
-                            return in_array($checklist->repair_status, ['pending', 'in_progress']);
-                        });
-                    } elseif ($filter === 'completed') {
-                        $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
-                            return $checklist->repair_status === 'completed';
-                        });
-                    }
-                    
-                    $maintenance->itemOrderMaintenance->checklists = $filteredChecklists;
+        // If filter is for order status (in_progress or completed), filter orders by their status
+        if ($filter === 'in_progress') {
+            $filteredMaintenancesByOrder = $sortedMaintenancesByOrder->filter(function ($maintenances) {
+                // Get the order from the first maintenance in this group
+                $firstMaintenance = $maintenances->first();
+                if ($firstMaintenance && $firstMaintenance->itemOrderMaintenance && $firstMaintenance->itemOrderMaintenance->itemOrder && $firstMaintenance->itemOrderMaintenance->itemOrder->order) {
+                    $order = $firstMaintenance->itemOrderMaintenance->itemOrder->order;
+                    return $order->status === \App\Enum\OrderStatus::InProgress;
                 }
-                return $maintenance;
-            })->filter(function ($maintenance) {
-                if ($maintenance->itemOrderMaintenance) {
-                    return $maintenance->itemOrderMaintenance->checklists->count() > 0;
-                }
-                return true; // Keep maintenances without itemOrderMaintenance
+                return false; // Exclude uncategorized orders
             });
-        })->filter(function ($maintenances) {
-            return $maintenances->count() > 0; // Filter out orders with no maintenances after filtering
-        });
+        } elseif ($filter === 'completed') {
+            // For 'completed' filter, now it follows order status (Selesai) instead of checklist status
+            $filteredMaintenancesByOrder = $sortedMaintenancesByOrder->filter(function ($maintenances) {
+                // Get the order from the first maintenance in this group
+                $firstMaintenance = $maintenances->first();
+                if ($firstMaintenance && $firstMaintenance->itemOrderMaintenance && $firstMaintenance->itemOrderMaintenance->itemOrder && $firstMaintenance->itemOrderMaintenance->itemOrder->order) {
+                    $order = $firstMaintenance->itemOrderMaintenance->itemOrder->order;
+                    return $order->status === \App\Enum\OrderStatus::Finish;
+                }
+                return false; // Exclude uncategorized orders
+            });
+        } else {
+            // For other filters, apply to checklist level
+            $filteredMaintenancesByOrder = $sortedMaintenancesByOrder->map(function ($maintenances) use ($filter) {
+                return $maintenances->map(function ($maintenance) use ($filter) {
+                    if ($maintenance->itemOrderMaintenance) {
+                        $filteredChecklists = $maintenance->itemOrderMaintenance->checklists;
+                        
+                        if ($filter === 'needs_repair') {
+                            $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
+                                return $checklist->condition === 'rusak' || in_array($checklist->repair_status, ['pending', 'in_progress', null]);
+                            });
+                        } elseif ($filter === 'broken_only') {
+                            $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
+                                return $checklist->condition === 'rusak';
+                            });
+                        } elseif ($filter === 'in_repair') {
+                            $filteredChecklists = $filteredChecklists->filter(function ($checklist) {
+                                return in_array($checklist->repair_status, ['pending', 'in_progress']);
+                            });
+                        }
+                        // Note: 'completed' filter is now handled above, so it's not in this section
+                        
+                        $maintenance->itemOrderMaintenance->checklists = $filteredChecklists;
+                    }
+                    return $maintenance;
+                })->filter(function ($maintenance) {
+                    if ($maintenance->itemOrderMaintenance) {
+                        return $maintenance->itemOrderMaintenance->checklists->count() > 0;
+                    }
+                    return true; // Keep maintenances without itemOrderMaintenance
+                });
+            })->filter(function ($maintenances) {
+                return $maintenances->count() > 0; // Filter out orders with no maintenances after filtering
+            });
+        }
 
         // Determine the latest order from the filtered results - prioritize by numeric order number as primary method
         if ($filteredMaintenancesByOrder->isNotEmpty()) {
@@ -397,6 +419,7 @@ class MyAssetsController extends Controller
                         $order = $firstMaintenance->itemOrderMaintenance->itemOrder->order;
                         $orderInfo = [
                             'number' => $order->number,
+                            'status' => $order->status,
                             'confirmation_date' => $order->confirmation_date,
                             'order_date' => $order->order_date,
                             'created_at' => $order->created_at,
@@ -407,6 +430,7 @@ class MyAssetsController extends Controller
                     return [
                         'order_number' => $orderNumber,
                         'order_date_info' => $orderInfo, // Add the order date information
+                        'order_status' => $orderInfo ? $orderInfo['status'] : null,
                         'maintenances' => $maintenances->map(function ($maintenance) {
                             $itemOrderMaintenance = $maintenance->itemOrderMaintenance;
                             return [

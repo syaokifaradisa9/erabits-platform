@@ -153,6 +153,9 @@ class WorksheetService
                 );
             }
             
+            // Cek dan update status order jika pekerjaan dimulai
+            $this->updateOrderStatusWhenWorkStarts($maintenance);
+            
             // Cek apakah semua checklist dalam order telah diisi dan update status order jika perlu
             $this->updateOrderStatusIfAllChecklistsCompleted($maintenance);
         });
@@ -162,8 +165,8 @@ class WorksheetService
     {
         $order = $maintenance->itemOrder->order;
         
-        // Hanya proses jika status order saat ini adalah 'Terkonfirmasi'
-        if ($order->status !== \App\Enum\OrderStatus::Confirmed) {
+        // Hanya proses jika status order saat ini adalah 'Terkonfirmasi' atau 'Dikerjakan'
+        if ($order->status !== \App\Enum\OrderStatus::Confirmed && $order->status !== \App\Enum\OrderStatus::InProgress) {
             return;
         }
         
@@ -204,4 +207,38 @@ class WorksheetService
             $order->update(['status' => \App\Enum\OrderStatus::Finish]);
         }
     }
+    
+    private function updateOrderStatusWhenWorkStarts(ItemOrderMaintenance $maintenance): void
+    {
+        $order = $maintenance->itemOrder->order;
+
+        // Hanya proses jika status order saat ini adalah 'Terkonfirmasi'
+        if ($order->status !== \App\Enum\OrderStatus::Confirmed) {
+            return;
+        }
+
+        // Cek apakah ada checklist yang sudah diisi (artinya pekerjaan sudah dimulai)
+        $hasChecklistData = false;
+        
+        // Dapatkan semua maintenances untuk order ini
+        $maintenances = $order->maintenances;
+        
+        foreach ($maintenances as $maintenanceItem) {
+            $checklists = $maintenanceItem->checklists;
+
+            foreach ($checklists as $checklist) {
+                // Jika ada checklist yang memiliki data (condition, repair_status, dll), artinya pekerjaan sudah dimulai
+                if (!empty($checklist->condition) || !empty($checklist->repair_status) || !empty($checklist->fix_action)) {
+                    $hasChecklistData = true;
+                    break 2; // Keluar dari kedua loop
+                }
+            }
+        }
+
+        // Jika ditemukan checklist dengan data, ubah status menjadi 'Dikerjakan'
+        if ($hasChecklistData) {
+            $order->update(['status' => \App\Enum\OrderStatus::InProgress]);
+        }
+    }
+
 }
