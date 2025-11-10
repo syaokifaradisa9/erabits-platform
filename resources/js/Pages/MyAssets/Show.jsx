@@ -158,31 +158,24 @@ export default function Show({ inventory, filter }) {
                             <h3 className="font-semibold text-gray-500">Tipe Layanan</h3>
                             <p className="text-gray-900 dark:text-white">{inventory.service_item_type.name}</p>
                         </div>
-                        {/* Tampilkan lokasi dari maintenance terbaru */}
-                        {inventory.maintenances && inventory.maintenances.length > 0 && (
-                            (() => {
-                                // Ambil maintenance terbaru berdasarkan finish_date atau created_at
-                                const latestMaintenance = inventory.maintenances.reduce((latest, current) => {
-                                    const currentFinishDate = new Date(current.item_order_maintenance?.finish_date || current.item_order_maintenance?.created_at || '1970-01-01');
-                                    const latestFinishDate = new Date(latest.item_order_maintenance?.finish_date || latest.item_order_maintenance?.created_at || '1970-01-01');
-                                    return currentFinishDate > latestFinishDate ? current : latest;
-                                }, inventory.maintenances[0]);
-                                
-                                if (latestMaintenance?.location) {
-                                    return (
-                                        <div>
-                                            <h3 className="font-semibold text-gray-500">Lokasi Pemeliharaan Terakhir</h3>
-                                            <p className="text-gray-900 dark:text-white">{latestMaintenance.location}</p>
-                                        </div>
-                                    );
-                                }
-                                return (
-                                    <div>
-                                        <h3 className="font-semibold text-gray-500">Lokasi Pemeliharaan Terakhir</h3>
-                                        <p className="text-gray-900 dark:text-white">-</p>
-                                    </div>
-                                );
-                            })()
+                        {/* Tampilkan lokasi dari maintenance terbaru berdasarkan aktivitas checklist */}
+                        {inventory.latest_maintenance_location && (
+                            <div>
+                                <h3 className="font-semibold text-gray-500">Lokasi Pemeliharaan Terakhir</h3>
+                                <p className="text-gray-900 dark:text-white">{inventory.latest_maintenance_location}</p>
+                            </div>
+                        )}
+                        {!inventory.latest_maintenance_location && inventory.location && (
+                            <div>
+                                <h3 className="font-semibold text-gray-500">Lokasi Pemeliharaan Terakhir</h3>
+                                <p className="text-gray-900 dark:text-white">{inventory.location}</p>
+                            </div>
+                        )}
+                        {!inventory.latest_maintenance_location && !inventory.location && (
+                            <div>
+                                <h3 className="font-semibold text-gray-500">Lokasi Pemeliharaan Terakhir</h3>
+                                <p className="text-gray-900 dark:text-white">-</p>
+                            </div>
                         )}
                         <div>
                             <h3 className="font-semibold text-gray-500">Nomor Seri</h3>

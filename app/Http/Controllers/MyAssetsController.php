@@ -93,14 +93,21 @@ class MyAssetsController extends Controller
             $latestMaintenanceImagePath = $latestItemOrderMaintenance?->image_path;
             $latestAssetImagePath = $latestItemOrderMaintenance?->asset_image_path;
             
-            // Ambil maintenance terbaru untuk mendapatkan lokasi terbaru 
-            $latestMaintenanceForLocation = $inventory->maintenances
-                ->sortByDesc(function ($m) {
-                    return $m->itemOrderMaintenance ? $m->itemOrderMaintenance->created_at ?? $m->itemOrderMaintenance->updated_at : $m->created_at ?? now();
-                })
-                ->first();
-                
-            $latestLocation = $latestMaintenanceForLocation?->location;
+            // Ambil maintenance terbaru berdasarkan checklist terbaru (paling akhir diupdate)
+            // Gunakan query langsung ke database untuk memastikan mendapatkan entri terbaru
+            $latestLocation = \App\Models\ClientInventoryMaintenance::where('client_inventory_id', $inventory->id)
+                ->leftJoin('item_order_maintenances', 'client_inventory_maintenances.item_order_maintenance_id', '=', 'item_order_maintenances.id')
+                ->leftJoin('item_order_checklists', 'item_order_maintenances.id', '=', 'item_order_checklists.item_order_maintenance_id')
+                ->select('client_inventory_maintenances.location')
+                ->orderByRaw('GREATEST(
+                    COALESCE(item_order_checklists.updated_at, "1970-01-01 00:00:00"), 
+                    COALESCE(item_order_maintenances.updated_at, "1970-01-01 00:00:00"),
+                    COALESCE(item_order_maintenances.created_at, "1970-01-01 00:00:00"),
+                    COALESCE(client_inventory_maintenances.updated_at, "1970-01-01 00:00:00"),
+                    COALESCE(client_inventory_maintenances.created_at, "1970-01-01 00:00:00")
+                ) DESC')
+                ->limit(1)
+                ->value('location');
 
             // Urutan prioritas: 
             // 1. customer_image_path (jika pelanggan upload)
@@ -118,7 +125,7 @@ class MyAssetsController extends Controller
             return [
                 'id' => $inventory->id,
                 'name' => $inventory->name,
-                'location' => $inventory->location,
+                'location' => $latestLocation ?: $inventory->location,  // Use latest maintenance location if available, otherwise default location
                 'identify_number' => $inventory->identify_number,
                 'updated_at' => $inventory->updated_at,
                 'service_item_type' => $inventory->serviceItemType,
@@ -159,6 +166,20 @@ class MyAssetsController extends Controller
                 $query->with(['checklists.repairHistories.user', 'itemOrder']);
             },
         ]);
+
+        $latestMaintenanceLocation = \App\Models\ClientInventoryMaintenance::where('client_inventory_id', $inventory->id)
+            ->leftJoin('item_order_maintenances', 'client_inventory_maintenances.item_order_maintenance_id', '=', 'item_order_maintenances.id')
+            ->leftJoin('item_order_checklists', 'item_order_maintenances.id', '=', 'item_order_checklists.item_order_maintenance_id')
+            ->select('client_inventory_maintenances.location')
+            ->orderByRaw('GREATEST(
+                COALESCE(item_order_checklists.updated_at, "1970-01-01 00:00:00"), 
+                COALESCE(item_order_maintenances.updated_at, "1970-01-01 00:00:00"),
+                COALESCE(item_order_maintenances.created_at, "1970-01-01 00:00:00"),
+                COALESCE(client_inventory_maintenances.updated_at, "1970-01-01 00:00:00"),
+                COALESCE(client_inventory_maintenances.created_at, "1970-01-01 00:00:00")
+            ) DESC')
+            ->limit(1)
+            ->value('location');
 
         // Urutkan maintenances berdasarkan created_at terbaru dari itemOrderMaintenance
         $inventory->maintenances = $inventory->maintenances->sortByDesc(function ($m) {
@@ -209,6 +230,7 @@ class MyAssetsController extends Controller
                 'model' => $inventory->model,
                 'identify_number' => $inventory->identify_number,
                 'location' => $inventory->location,
+                'latest_maintenance_location' => $latestMaintenanceLocation,
                 'service_item_type' => [
                     'name' => $inventory->serviceItemType->name,
                 ],

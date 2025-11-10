@@ -12,7 +12,7 @@ export default function WorksheetSheet({ order, maintenance, conditions }) {
         merk: maintenance.item_order.merk ?? "",
         model: maintenance.item_order.model ?? "",
         identify_number: maintenance.item_order.identify_number ?? "",
-        location: maintenance.client_inventory_maintenance?.location ?? "",
+        location: maintenance.latest_location ?? maintenance.client_inventory_maintenance?.location ?? maintenance.client_inventory_maintenance?.client_inventory?.location ?? "",
         finish_date: maintenance.finish_date
             ? new Date(maintenance.finish_date).toISOString().split("T")[0]
             : new Date().toISOString().split("T")[0],
