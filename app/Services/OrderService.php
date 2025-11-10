@@ -78,12 +78,14 @@ class OrderService{
                     $intervalMonths = 12 / $maintenanceCount;
                     $currentDate = Carbon::now();
 
-                    for ($j = 0; $j < $maintenanceCount; $j++) {
-                        $maintenanceDate = $currentDate->copy()->addMonths($intervalMonths * ($j + 1));
-                        $this->itemOrderMaintenanceRepository->store([
-                            'item_order_id' => $itemOrder->id,
-                            'estimation_date' => $maintenanceDate->toDateString(),
-                        ]);
+                    for ($i = 0; $i < $itemOrder->quantity; $i++) {
+                        for ($j = 0; $j < $maintenanceCount; $j++) {
+                            $maintenanceDate = $currentDate->copy()->addMonths($intervalMonths * ($j + 1));
+                            $this->itemOrderMaintenanceRepository->store([
+                                'item_order_id' => $itemOrder->id,
+                                'estimation_date' => $maintenanceDate->toDateString(),
+                            ]);
+                        }
                     }
                 }
             }

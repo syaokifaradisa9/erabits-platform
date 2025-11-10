@@ -132,7 +132,7 @@ export default function OrderIndex() {
         },
         {
             header: "Jumlah Permintaan",
-            render: (order) => order.item_count,
+            render: (order) => order.total_quantity,
         },
         {
             header: "Status",

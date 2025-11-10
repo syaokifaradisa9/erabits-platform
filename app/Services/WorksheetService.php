@@ -127,11 +127,11 @@ class WorksheetService
                 $clientInventory = $this->clientInventoryRepository->updateOrCreate(
                     [
                         'user_id' => $maintenance->itemOrder->order->client_id,
+                        'name' => $maintenance->itemOrder->name, // Include name to differentiate different items with same SN
                         'identify_number' => $worksheetDTO->identify_number,
                     ],
                     [
                         'service_item_type_id' => $maintenance->itemOrder->item->service_item_type_id,
-                        'name' => $maintenance->itemOrder->name,
                         'merk' => $worksheetDTO->merk,
                         'model' => $worksheetDTO->model,
                         ...$worksheetDTO->toClientInventoryArray()

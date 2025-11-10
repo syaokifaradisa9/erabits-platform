@@ -10,7 +10,11 @@ class OrderDatatableService implements DatatableService
 {
     private function getStartedQuery(DatatableRequest $request, $loggedUser, $additionalData)
     {
-        return Order::with(['client'])->withCount('itemOrders as item_count')
+        return Order::with(['client'])
+            ->addSelect([
+                'total_quantity' => \App\Models\ItemOrder::selectRaw('COALESCE(SUM(quantity), 0)')
+                    ->whereColumn('order_id', 'orders.id')
+            ])
             ->where(function($query) use ($request, $loggedUser){
                 $query->when($loggedUser->hasRole(UserRole::Manager), function($query) use ($loggedUser){
                     $query->whereHas("itemOrders.item", function($itemOrder) use ($loggedUser){

@@ -89,26 +89,6 @@ class MyAssetsController extends Controller
                 ->orderBy('created_at', 'DESC')
                 ->orderBy('id', 'DESC')  // Tambahkan urutan berdasarkan ID terakhir sebagai fallback
                 ->first();
-                
-            // Ambil item_order_maintenance terbaru yang terkait dengan inventory ini berdasarkan kesamaan data dan memiliki asset_image_path
-            $latestItemOrderMaintenance = \App\Models\ItemOrderMaintenance::whereNotNull('asset_image_path')
-                ->whereHas('itemOrder', function ($query) use ($inventory) {
-                    $query->where('name', $inventory->name)
-                          ->where('merk', $inventory->merk)
-                          ->where('model', $inventory->model)
-                          ->where('identify_number', $inventory->identify_number);
-                })
-                ->whereHas('itemOrder.item.serviceItemType', function ($query) use ($inventory) {
-                    $query->where('id', $inventory->service_item_type_id);
-                })
-                ->whereHas('itemOrder.order', function ($query) use ($inventory) {
-                    $query->where('client_id', $inventory->user_id);
-                })
-                ->with('itemOrder')
-                ->orderBy('finish_date', 'DESC')
-                ->orderBy('created_at', 'DESC')
-                ->orderBy('id', 'DESC')  // Tambahkan urutan berdasarkan ID terakhir sebagai fallback
-                ->first();
             
             $latestMaintenanceImagePath = $latestItemOrderMaintenance?->image_path;
             $latestAssetImagePath = $latestItemOrderMaintenance?->asset_image_path;

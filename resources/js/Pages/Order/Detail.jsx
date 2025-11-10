@@ -101,7 +101,7 @@ export default function Detail({ order }) {
                         Permintaan Layanan
                     </h3>
                     <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                        {order.item_orders.length} item
+                        {order.item_orders.reduce((total, itemOrder) => total + (itemOrder.quantity || 0), 0)} item
                     </p>
 
                     {serviceTypes.map((serviceType) => (
@@ -128,6 +128,9 @@ export default function Detail({ order }) {
                                             <th className="px-4 py-3 text-xs font-medium text-left text-gray-700 md:text-sm dark:text-slate-300">
                                                 No Seri
                                             </th>
+                                            <th className="px-4 py-3 text-xs font-medium text-left text-gray-700 md:text-sm dark:text-slate-300">
+                                                Jumlah
+                                            </th>
                                             <th className="px-4 py-3 text-xs font-medium text-right text-gray-700 md:text-sm dark:text-slate-300">
                                                 Tarif (Rp.)
                                             </th>
@@ -147,14 +150,17 @@ export default function Detail({ order }) {
                                                         {itemOrder.item.name}
                                                     </td>
                                                     <td className="px-4 py-3 text-xs text-gray-700 md:text-sm dark:text-slate-300">
-                                                        {itemOrder.brand ?? "-"}
+                                                        {itemOrder.merk ?? "-"}
                                                     </td>
                                                     <td className="px-4 py-3 text-xs text-gray-700 md:text-sm dark:text-slate-300">
                                                         {itemOrder.model ?? "-"}
                                                     </td>
                                                     <td className="px-4 py-3 text-xs text-gray-700 md:text-sm dark:text-slate-300">
-                                                        {itemOrder.serial_number ??
+                                                        {itemOrder.identify_number ??
                                                             "-"}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-xs text-gray-700 md:text-sm dark:text-slate-300 text-center">
+                                                        {itemOrder.quantity ?? "1"}
                                                     </td>
                                                     <td className="px-4 py-3 text-xs font-medium text-right text-gray-900 md:text-sm dark:text-white">
                                                         {formatCurrency(

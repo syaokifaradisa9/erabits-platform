@@ -16,43 +16,12 @@ export default function WorksheetIndex({ order, maintenances }) {
     });
 
     const enabledMaintenanceIds = useMemo(() => {
-        const groupedByItemOrder = maintenances.reduce((acc, item) => {
-            const key = item.item_order_id;
-            if (!acc[key]) {
-                acc[key] = [];
-            }
-            acc[key].push(item);
-            return acc;
-        }, {});
-
         const enabledIds = new Set();
-        const now = new Date().getTime();
-
-        for (const itemOrderId in groupedByItemOrder) {
-            const group = groupedByItemOrder[itemOrderId];
-            const finished = group.filter((item) => item.finish_date);
-            const unfinished = group.filter((item) => !item.finish_date);
-
-            finished.forEach((item) => enabledIds.add(item.id));
-
-            if (unfinished.length > 0) {
-                let nearestTask = null;
-                let smallestDiff = Infinity;
-
-                unfinished.forEach((task) => {
-                    const taskTime = new Date(task.estimation_date).getTime();
-                    const diff = Math.abs(now - taskTime);
-                    if (diff < smallestDiff) {
-                        smallestDiff = diff;
-                        nearestTask = task;
-                    }
-                });
-
-                if (nearestTask) {
-                    enabledIds.add(nearestTask.id);
-                }
-            }
-        }
+        
+        // Enable all maintenance records - remove sequential restriction
+        maintenances.forEach((item) => {
+            enabledIds.add(item.id);
+        });
 
         return enabledIds;
     }, [maintenances]);
