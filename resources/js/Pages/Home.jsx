@@ -586,9 +586,20 @@ export default function Home({ serviceCategories, auth }) {
                         {filteredCategories && filteredCategories.length > 0 ? (
                             filteredCategories.map((category) => (
                                 <div key={category.id} className="mb-12">
-                                    <div className="flex items-center mb-6 border-b pb-3">
-                                        <div className="text-3xl mr-4">{category.icon}</div>
-                                        <h3 className="text-2xl font-bold text-gray-800">{category.name}</h3>
+                                    <div className="flex items-center mb-6 border-b pb-3 justify-between">
+                                        <div className="flex items-center">
+                                            <div className="text-3xl mr-4">{category.icon}</div>
+                                            <h3 className="text-2xl font-bold text-gray-800">{category.name}</h3>
+                                        </div>
+                                        <button
+                                            onClick={() => openAllItemsModal(category)}
+                                            className="bg-blue-100 hover:bg-blue-200 text-blue-700 hover:text-blue-900 font-medium py-2 px-4 rounded-lg transition duration-300 flex items-center border border-blue-300"
+                                        >
+                                            Lihat Semua
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                                            </svg>
+                                        </button>
                                     </div>
                                     
                                     {category.items && category.items.length > 0 ? (
