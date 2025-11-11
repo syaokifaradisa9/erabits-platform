@@ -131,6 +131,46 @@ export default function OrderIndex() {
             ),
         },
         {
+            header: "Layanan",
+            render: (order) => {
+                if (order.item_orders && order.item_orders.length > 0) {
+                    // Ambil semua layanan unik dari item orders
+                    const services = [...new Set(order.item_orders.map(itemOrder => 
+                        itemOrder.item?.service_item_type?.name
+                    ).filter(name => name))];
+                    return services.length > 0 ? services.join(", ") : "-";
+                }
+                return "-";
+            },
+            footer: (
+                <FormSearch
+                    name="service"
+                    onChange={onParamsChange}
+                    placeholder="Filter Layanan"
+                />
+            ),
+        },
+        {
+            header: "Item",
+            render: (order) => {
+                if (order.item_orders && order.item_orders.length > 0) {
+                    // Ambil semua item unik dari item orders
+                    const items = [...new Set(order.item_orders.map(itemOrder => 
+                        itemOrder.item?.name
+                    ).filter(name => name))];
+                    return items.length > 0 ? items.join(", ") : "-";
+                }
+                return "-";
+            },
+            footer: (
+                <FormSearch
+                    name="item"
+                    onChange={onParamsChange}
+                    placeholder="Filter Item"
+                />
+            ),
+        },
+        {
             header: "Jumlah Permintaan",
             render: (order) => order.total_quantity,
         },

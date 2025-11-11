@@ -10,7 +10,7 @@ class OrderDatatableService implements DatatableService
 {
     private function getStartedQuery(DatatableRequest $request, $loggedUser, $additionalData)
     {
-        return Order::with(['client'])
+        return Order::with(['client', 'itemOrders.item.serviceItemType'])
             ->addSelect([
                 'total_quantity' => \App\Models\ItemOrder::selectRaw('COALESCE(SUM(quantity), 0)')
                     ->whereColumn('order_id', 'orders.id')
@@ -44,6 +44,16 @@ class OrderDatatableService implements DatatableService
                 })
                 ->when($request->status, function ($query, $search) {
                     $query->where('status', 'like', "%$search%");
+                })
+                ->when($request->service, function ($query, $search) {
+                    $query->whereHas('itemOrders.item.serviceItemType', function ($query) use ($search) {
+                        $query->where('name', 'like', "%$search%");
+                    });
+                })
+                ->when($request->item, function ($query, $search) {
+                    $query->whereHas('itemOrders.item', function ($query) use ($search) {
+                        $query->where('name', 'like', "%$search%");
+                    });
                 });
             });
     }
