@@ -31,7 +31,9 @@ Route::prefix('api')->group(function () {
 
 Route::prefix("auth")->name("auth.")->controller(AuthController::class)->group(function () {
     Route::get("login", "login")->name("login");
+    Route::get("register", "register")->name("register");
     Route::post("verify", "verify")->name("verify");
+    Route::post("store", "store")->name("store");
     Route::middleware('auth')->get("logout", "logout")->name("logout");
 });
 

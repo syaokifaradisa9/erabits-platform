@@ -4,6 +4,7 @@ import CartModal from '@/Components/CartModal';
 import AllItemsModal from '@/Components/AllItemsModal';
 import LoginModal from '@/Components/LoginModal';
 import SuccessModal from '@/Components/SuccessModal';
+import RegisterModal from '@/Components/RegisterModal';
 
 // Komponen untuk item dengan lazy loading gambar
 function ItemCard({ item, onAddToCart, isMobile = false }) {
@@ -46,7 +47,7 @@ function ItemCard({ item, onAddToCart, isMobile = false }) {
                 )}
                 {item.image_path && !imgError ? (
                     <img 
-                        src={`/storage/${item.image_path}?t=${new Date().getTime()}`} 
+                        src={item.image_path.startsWith('http') ? `${item.image_path}?t=${new Date().getTime()}` : `/storage/${item.image_path}?t=${new Date().getTime()}`}
                         alt={item.name} 
                         className={`w-full ${isMobile ? 'h-40' : 'h-48'} object-contain p-4 bg-gray-50 transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
                         onLoad={() => setImgLoaded(true)}
@@ -105,6 +106,7 @@ export default function Home({ serviceCategories, auth }) {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [successModalOpen, setSuccessModalOpen] = useState(false);
     const [successModalMessage, setSuccessModalMessage] = useState('');
+    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
     const [priceRange, setPriceRange] = useState({ min: '', max: '' });
     const [selectedMaintenance, setSelectedMaintenance] = useState('');
     const [sortBy, setSortBy] = useState('name-asc');
@@ -432,12 +434,12 @@ export default function Home({ serviceCategories, auth }) {
                                 </Link>
                             </div>
                         ) : (
-                            <Link 
-                                href={'/auth/login'}
+                            <button
+                                onClick={() => setIsLoginModalOpen(true)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-300"
                             >
                                 Login
-                            </Link>
+                            </button>
                         )}
                     </nav>
                 </div>
@@ -457,6 +459,10 @@ export default function Home({ serviceCategories, auth }) {
                 isOpen={isLoginModalOpen}
                 onClose={() => setIsLoginModalOpen(false)}
                 onLoginSuccess={handleLoginSuccess}
+                onOpenRegister={() => {
+                    setIsLoginModalOpen(false);
+                    setIsRegisterModalOpen(true);
+                }}
             />
 
             <SuccessModal 
@@ -464,6 +470,15 @@ export default function Home({ serviceCategories, auth }) {
                 onClose={closeSuccessModalAndRedirect}
                 title="Berhasil!"
                 message={successModalMessage}
+            />
+
+            <RegisterModal
+                isOpen={isRegisterModalOpen}
+                onClose={() => setIsRegisterModalOpen(false)}
+                onOpenLogin={() => {
+                    setIsRegisterModalOpen(false);
+                    setIsLoginModalOpen(true);
+                }}
             />
 
             {/* All Items Modal */}
@@ -767,18 +782,24 @@ export default function Home({ serviceCategories, auth }) {
                         Buat akun atau masuk ke sistem untuk mengakses semua fitur kami
                     </p>
                     <div className="space-x-4">
-                        <Link 
+                        {/* <Link 
                             href="/auth/login"
                             className="bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-100 transition duration-300 inline-block"
                         >
                             Masuk ke Akun
-                        </Link>
-                        <Link 
-                            href="/auth/login"
+                        </Link> */}
+                        <button
+                            onClick={() => setIsLoginModalOpen(true)}
+                            className="bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-100 transition duration-300 inline-block"
+                        >
+                            Masuk Ke Akun
+                        </button>
+                        <button
+                            onClick={() => setIsRegisterModalOpen(true)}
                             className="bg-transparent border-2 border-white text-white font-semibold px-6 py-3 rounded-lg hover:bg-white hover:text-blue-600 transition duration-300 inline-block"
                         >
                             Daftar Akun Baru
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </section>

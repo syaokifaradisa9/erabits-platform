@@ -27,4 +27,23 @@ class AuthService{
         request()->session()->invalidate();
         request()->session()->regenerateToken();
     }
+    
+    public function register($name, $email, $password){
+        try {
+            $user = \App\Models\User::create([
+                'name' => $name,
+                'email' => $email,
+                'password' => bcrypt($password)
+            ]);
+            
+            // Berikan role Client secara otomatis
+            $user->assignRole(\App\Enum\UserRole::Client);
+            
+            Auth::login($user);
+            
+            return $user;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
 }

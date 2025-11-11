@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
+export default function LoginModal({ isOpen, onClose, onLoginSuccess, onOpenRegister }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
@@ -82,13 +82,28 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                             {isLoading ? 'Logging in...' : 'Login'}
                         </button>
                     </div>
-                    <div className="text-center mt-4">
+                    
+                    <div className="mt-4 text-center text-sm border-t pt-4">
+                        Belum punya akun?{' '}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onClose();
+                                if (onOpenRegister) {
+                                    onOpenRegister();
+                                }
+                            }}
+                            className="font-medium text-blue-600 hover:text-blue-500"
+                        >
+                            Registrasi di sini
+                        </button>
+                        <span className="mx-2 text-gray-400">|</span>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="font-semibold text-gray-600 hover:text-gray-800"
+                            className="font-medium text-gray-600 hover:text-gray-800"
                         >
-                            Cancel
+                            Batal
                         </button>
                     </div>
                 </form>

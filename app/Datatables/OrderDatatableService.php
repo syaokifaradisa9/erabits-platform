@@ -20,6 +20,8 @@ class OrderDatatableService implements DatatableService
                     $query->whereHas("itemOrders.item", function($itemOrder) use ($loggedUser){
                         $itemOrder->where("service_item_type_id", $loggedUser->service_item_type_id);
                     });
+                })->when($loggedUser->hasRole(UserRole::Client), function($query) use ($loggedUser){
+                    $query->where('client_id', $loggedUser->id);
                 })->when($request->search, function ($query, $search) {
                     $query->where('order_number', 'like', "%$search%")
                         ->orWhere('status', 'like', "%$search%")
